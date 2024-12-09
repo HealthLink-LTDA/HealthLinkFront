@@ -1,0 +1,10 @@
+^C:\USERS\DANIEL\DESKTOP\MEDICOPRO\MEDICAL_APP\BUILD\WINDOWS\X64\CMAKEFILES\0A5FDA61D3DC930477026CC5B6D81137\INSTALL_FORCE.RULE
+setlocal
+cd .
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
