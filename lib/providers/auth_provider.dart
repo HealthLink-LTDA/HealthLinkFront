@@ -9,10 +9,10 @@ class AuthProvider with ChangeNotifier {
   bool get isLoggedIn => _isLoggedIn;
   String? get currentUser => _currentUser;
 
-  void login(String email, String password) async {
+  Future<bool> login(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('localhost:3001/funcionario'),
+        Uri.parse('http://localhost:3001/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': email,
@@ -20,20 +20,25 @@ class AuthProvider with ChangeNotifier {
         }),
       );
 
-      final String? token = response.headers['authorization'];
+      if (response.statusCode == 200) {
+        // Verifica se o token existe no corpo da resposta
+        final String? token = jsonDecode(response.body)['access_token'];
 
-      if (token != null) {
-        //Navigator.pushReplacementNamed(context, route);
-
-        _isLoggedIn = true;
-        _currentUser = email;
-        notifyListeners();
+        if (token != null) {
+          _isLoggedIn = true;
+          _currentUser = email;
+          notifyListeners();
+          return true;
+        }
+      } else {
+        debugPrint('Login failed: ${response.statusCode} ${response.body}');
       }
+      return false;
     } catch (e) {
-      print('Erro de login: $e');
+      debugPrint('Erro de login: $e');
+      return false;
     }
   }
-
   void logout() {
     _isLoggedIn = false;
     _currentUser = null;
