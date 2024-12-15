@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:medical_app/providers/auth_provider.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,13 +22,39 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleSubmit() {
+  void _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
-      context.read<AuthProvider>().login(
-            _emailController.text,
-            _passwordController.text,
-          );
+      final authProvider = context.read<AuthProvider>();
+      final success = await authProvider.login(
+        _emailController.text,
+        _passwordController.text,
+      );
+
+      if (success) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        _showErrorDialog('Login failed', 'Invalid email or password.');
+      }
     }
+  }
+
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
