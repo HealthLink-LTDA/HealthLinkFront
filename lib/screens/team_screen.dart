@@ -16,7 +16,7 @@ class _TeamScreenState extends State<TeamScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _crmController = TextEditingController();
-  String _selectedRole = 'doctor';
+  int _selectedRole = 1;
   User? _editingMember;
 
   @override
@@ -41,7 +41,7 @@ class _TeamScreenState extends State<TeamScreen> {
       _emailController.clear();
       _passwordController.clear();
       _crmController.clear();
-      _selectedRole = 'doctor';
+      _selectedRole = 1;
     }
 
     showDialog(
@@ -85,31 +85,29 @@ class _TeamScreenState extends State<TeamScreen> {
                       },
                     ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
+                  DropdownButtonFormField<int>(
                     value: _selectedRole,
                     decoration: const InputDecoration(
                       labelText: 'Role',
                       border: OutlineInputBorder(),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'doctor', child: Text('Doctor')),
-                      DropdownMenuItem(value: 'nurse', child: Text('Nurse')),
-                      DropdownMenuItem(
-                          value: 'technician', child: Text('Technician')),
-                      DropdownMenuItem(
-                          value: 'assistant', child: Text('Nursing Assistant')),
+                      DropdownMenuItem(value: 1, child: Text('Admin')),
+                      DropdownMenuItem(value: 2, child: Text('Doctor')),
+                      DropdownMenuItem(value: 3, child: Text('Nurse')),
+                      DropdownMenuItem(value: 4, child: Text('Technician')),
                     ],
                     onChanged: (value) {
                       setState(() {
                         _selectedRole = value!;
-                        if (_selectedRole != 'doctor') {
+                        if (_selectedRole != 2) {
                           _crmController.clear();
                         }
                       });
                     },
                   ),
                   const SizedBox(height: 16),
-                  if (_selectedRole == 'doctor')
+                  if (_selectedRole == 2)
                     TextFormField(
                       controller: _crmController,
                       decoration: const InputDecoration(
@@ -117,7 +115,7 @@ class _TeamScreenState extends State<TeamScreen> {
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
-                        if (_selectedRole == 'doctor' &&
+                        if (_selectedRole == 2 &&
                             (value == null || value.isEmpty)) {
                           return 'Please enter CRM';
                         }
@@ -159,9 +157,7 @@ class _TeamScreenState extends State<TeamScreen> {
                       email: _emailController.text,
                       role: _selectedRole,
                       password: _passwordController.text,
-                      crm: _selectedRole == 'doctor'
-                          ? _crmController.text
-                          : null,
+                      crm: _selectedRole == 2 ? _crmController.text : null,
                     );
                     context.read<UserProvider>().addTeamMember(user);
                     Navigator.pop(context);
@@ -185,7 +181,7 @@ class _TeamScreenState extends State<TeamScreen> {
                                 email: _editingMember!.email,
                                 role: _selectedRole,
                                 password: _passwordController.text,
-                                crm: _selectedRole == 'doctor'
+                                crm: _selectedRole == 2
                                     ? _crmController.text
                                     : null,
                               );
@@ -269,7 +265,7 @@ class _TeamScreenState extends State<TeamScreen> {
                   email: _editingMember!.email,
                   role: _selectedRole,
                   password: _passwordController.text,
-                  crm: _selectedRole == 'doctor' ? _crmController.text : null,
+                  crm: _selectedRole == 2 ? _crmController.text : null,
                 );
 
                 context.read<UserProvider>().updateTeamMember(
@@ -289,6 +285,21 @@ class _TeamScreenState extends State<TeamScreen> {
           ],
         ),
       );
+    }
+  }
+
+  String getRoleText(int role) {
+    switch (role) {
+      case 1:
+        return 'Admin';
+      case 2:
+        return 'Doctor';
+      case 3:
+        return 'Nurse';
+      case 4:
+        return 'Technician';
+      default:
+        return 'Unknown';
     }
   }
 
@@ -321,13 +332,13 @@ class _TeamScreenState extends State<TeamScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        member.role[0].toUpperCase() + member.role.substring(1),
+                        getRoleText(member.role),
                         style: TextStyle(
                           color: Colors.grey[600],
                         ),
                       ),
                       Text(member.email),
-                      if (member.role == 'doctor' && member.crm != null)
+                      if (member.role == 2 && member.crm != null)
                         Text('CRM: ${member.crm}'),
                       const SizedBox(height: 8),
                       Row(
