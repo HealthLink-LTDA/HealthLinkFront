@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:medical_app/models/user.dart';
-import 'package:medical_app/providers/data_provider.dart';
+import 'package:medical_app/providers/user_provider.dart';
 
 class TeamScreen extends StatefulWidget {
   const TeamScreen({super.key});
@@ -158,11 +158,12 @@ class _TeamScreenState extends State<TeamScreen> {
                       name: _nameController.text,
                       email: _emailController.text,
                       role: _selectedRole,
+                      password: _passwordController.text,
                       crm: _selectedRole == 'doctor'
                           ? _crmController.text
                           : null,
                     );
-                    context.read<DataProvider>().addTeamMember(user);
+                    context.read<UserProvider>().addTeamMember(user);
                     Navigator.pop(context);
                   } else {
                     showDialog(
@@ -183,12 +184,13 @@ class _TeamScreenState extends State<TeamScreen> {
                                 name: _nameController.text,
                                 email: _editingMember!.email,
                                 role: _selectedRole,
+                                password: _passwordController.text,
                                 crm: _selectedRole == 'doctor'
                                     ? _crmController.text
                                     : null,
                               );
 
-                              context.read<DataProvider>().updateTeamMember(
+                              context.read<UserProvider>().updateTeamMember(
                                     _editingMember!.id,
                                     updatedUser,
                                   );
@@ -232,7 +234,7 @@ class _TeamScreenState extends State<TeamScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              context.read<DataProvider>().deleteTeamMember(member.id);
+              context.read<UserProvider>().deleteTeamMember(member.id);
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
@@ -266,10 +268,11 @@ class _TeamScreenState extends State<TeamScreen> {
                   name: _nameController.text,
                   email: _editingMember!.email,
                   role: _selectedRole,
+                  password: _passwordController.text,
                   crm: _selectedRole == 'doctor' ? _crmController.text : null,
                 );
 
-                context.read<DataProvider>().updateTeamMember(
+                context.read<UserProvider>().updateTeamMember(
                       _editingMember!.id,
                       updatedUser,
                     );
@@ -295,7 +298,7 @@ class _TeamScreenState extends State<TeamScreen> {
       appBar: AppBar(
         title: const Text('Medical Team'),
       ),
-      body: Consumer<DataProvider>(
+      body: Consumer<UserProvider>(
         builder: (context, provider, _) {
           return ListView.builder(
             padding: const EdgeInsets.all(16),
