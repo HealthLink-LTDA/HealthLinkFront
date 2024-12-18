@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:medical_app/providers/auth_provider.dart';
-import 'package:medical_app/providers/data_provider.dart';
+import 'package:medical_app/providers/patient_provider.dart';
+import 'package:medical_app/providers/user_provider.dart';
+import 'package:medical_app/providers/record_provider.dart';
 import 'package:medical_app/screens/login_screen.dart';
 import 'package:medical_app/screens/home_screen.dart';
 
@@ -17,7 +19,19 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => DataProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, PatientProvider>(
+          create: (context) => PatientProvider(Provider.of<AuthProvider>(context, listen: false)),
+          update: (context, authProvider, previousPatientProvider) =>PatientProvider(authProvider),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, UserProvider>(
+          create: (context) => UserProvider(Provider.of<AuthProvider>(context, listen: false)),
+          update: (context, authProvider, previousUserProvider) =>UserProvider(authProvider),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, RecordProvider>(
+          create: (context) => RecordProvider(Provider.of<AuthProvider>(context, listen: false)),
+          update: (context, authProvider, previousRecordProvider) =>RecordProvider(authProvider),
+        ),
+
       ],
       child: MaterialApp(
         title: 'Medical App',
