@@ -14,4 +14,15 @@ class Patient {
     required this.guardianName,
     this.notes,
   });
+
+   factory Patient.fromJson(Map<String, dynamic> json) {
+    return Patient(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      cpf: json['cpf'] as String,
+      dateOfBirth: json['dateOfBirth'] as String,
+      guardianName: json['guardianName'] as String,
+      notes: json['notes'] as String?,
+    );
+  }
 }

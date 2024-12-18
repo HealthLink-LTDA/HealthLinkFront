@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:medical_app/models/patient.dart';
-import 'package:medical_app/providers/data_provider.dart';
+import 'package:medical_app/providers/patient_provider.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:intl/intl.dart';
 
@@ -162,7 +162,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                     guardianName: _guardianController.text,
                     notes: _notesController.text,
                   );
-                  context.read<DataProvider>().addPatient(patient);
+                  context.read<PatientProvider>().addPatient(patient);
                   Navigator.pop(context);
                 }
               } else {
@@ -190,7 +190,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              context.read<DataProvider>().deletePatient(patient.id);
+              context.read<PatientProvider>().deletePatient(patient.id);
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
@@ -228,7 +228,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                   notes: _notesController.text,
                 );
 
-                context.read<DataProvider>().updatePatient(
+                context.read<PatientProvider>().updatePatient(
                       _editingPatient!.id,
                       updatedPatient,
                     );
@@ -254,7 +254,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
       appBar: AppBar(
         title: const Text('Patients'),
       ),
-      body: Consumer<DataProvider>(
+      body: Consumer<PatientProvider>(
         builder: (context, provider, _) {
           return ListView.builder(
             padding: const EdgeInsets.all(16),
