@@ -20,4 +20,21 @@ class Record {
     required this.vomitoPersistente,
     required this.date,
   });
+<<<<<<< Updated upstream
+=======
+
+  factory Record.fromJson(Map<String, dynamic> json) {
+    return Record(
+      id: json['id'] as String,
+      pacienteId: json['pacienteId'] as String,
+      enfermeiraId: json['enfermeiraId'] as String,
+      neurologico: json['neurologico'] as int,
+      cardioVascular: json['cardioVascular'] as int,
+      respiratorio: json['respiratorio'] as int,
+      nebulizacaoResgate: json['nebulizacaoResgate'] as bool,
+      vomitoPersistente: json['vomitoPersistente'] as bool,
+      date: json['date'] as String,
+    );
+  }
+>>>>>>> Stashed changes
 }
