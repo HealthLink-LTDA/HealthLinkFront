@@ -28,7 +28,7 @@ class UserProvider with ChangeNotifier {
         'Authorization': 'Bearer $token',
       });
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
         List<User> users = data.map((userJson) => User.fromJson(userJson)).toList();
 
@@ -37,6 +37,38 @@ class UserProvider with ChangeNotifier {
 
         notifyListeners();
         return users;
+      } else {
+        debugPrint('Erro ao encontrar os funcionários: ${response.statusCode}');
+        debugPrint(response.body);
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Erro ao fazer o request: $e');
+      return null;
+    }
+  }
+
+  Future<User?> fetchTeamMemberById() async {
+    final token = authProvider.authToken;
+
+    if (token == null) {
+      debugPrint('Erro: Usuário não autenticado.');
+      return null;
+    }
+
+    try {
+      final response = await http.get(Uri.parse('http://localhost:3001/funcionario'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      });
+
+      if (response.statusCode == 200) {
+        dynamic data = jsonDecode(response.body);
+        User user = data.map((userJson) => User.fromJson(userJson)).toList();
+
+        notifyListeners();
+        return user;
       } else {
         debugPrint('Erro ao encontrar os funcionários: ${response.statusCode}');
         debugPrint(response.body);
@@ -64,17 +96,18 @@ class UserProvider with ChangeNotifier {
           'Authorization': 'Bearer $token',
           },
         body: jsonEncode({
-          'name': user.name,
+          'nome': user.name,
           'email': user.email,
-          'password': user.password,
+          'senha': user.password,
           'crm': user.crm,
-          'role': user.role,
+          'roleId': user.role,
         }),
       );
 
       if (response.statusCode == 201) {
         debugPrint('Funcionário criado com sucesso!');
         notifyListeners();
+        fetchTeamMembers();
         return true;
       } else {
         debugPrint('Erro ao criar o funcionário: ${response.statusCode}');
@@ -103,17 +136,18 @@ class UserProvider with ChangeNotifier {
           'Authorization': 'Bearer $token',
           },
         body: jsonEncode({
-          'name': updatedUser.name,
+          'nome': updatedUser.name,
           'email': updatedUser.email,
-          'password': updatedUser.password,
-          'role': updatedUser.role,
+          'senha': updatedUser.password,
           'crm': updatedUser.crm,
+          'roleId': updatedUser.role,
         }),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         debugPrint('Funcionário atualizado com sucesso!');
         notifyListeners();
+        fetchTeamMembers();
         return true;
       } else {
         debugPrint('Erro ao atualizar o funcionário: ${response.statusCode}');
@@ -146,6 +180,7 @@ class UserProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         debugPrint('Funcionário deletado com sucesso!');
         notifyListeners();
+        fetchTeamMembers();
         return true;
       } else {
         debugPrint('Erro ao deletar funcionário: ${response.statusCode}');
