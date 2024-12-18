@@ -20,8 +20,6 @@ class Record {
     required this.vomitoPersistente,
     required this.date,
   });
-<<<<<<< Updated upstream
-=======
 
   factory Record.fromJson(Map<String, dynamic> json) {
     return Record(
@@ -36,5 +34,4 @@ class Record {
       date: json['date'] as String,
     );
   }
->>>>>>> Stashed changes
 }

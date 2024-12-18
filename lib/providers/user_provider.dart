@@ -105,9 +105,9 @@ class UserProvider with ChangeNotifier {
         body: jsonEncode({
           'name': updatedUser.name,
           'email': updatedUser.email,
+          'password': updatedUser.password,
           'role': updatedUser.role,
           'crm': updatedUser.crm,
-          'password': updatedUser.password,
         }),
       );
 
