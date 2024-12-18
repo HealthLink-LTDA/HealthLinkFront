@@ -29,7 +29,7 @@ class PatientProvider with ChangeNotifier {
         'Authorization': 'Bearer $token',
       });
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
         List<Patient> patients = data.map((patientJson) => Patient.fromJson(patientJson)).toList();
 
@@ -49,6 +49,38 @@ class PatientProvider with ChangeNotifier {
     }
   }
 
+  Future<Patient?> fetchPatientsById(String id) async {
+    final token = authProvider.authToken;
+
+    if (token == null) {
+      debugPrint('Erro: Usuário não autenticado.');
+      return null;
+    }
+
+    try {
+      final response = await http.get(Uri.parse('http://localhost:3001/paciente/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      });
+
+      if (response.statusCode == 200) {
+        dynamic data = jsonDecode(response.body);
+        Patient patient = data.map((patientJson) => Patient.fromJson(patientJson)).toList();
+
+        notifyListeners();
+        return patient;
+      } else {
+        debugPrint('Erro ao encontrar o paciente: ${response.statusCode}');
+        debugPrint(response.body);
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Erro ao fazer o request: $e');
+      return null;
+    }
+  }
+
   Future<bool> addPatient(Patient patient) async {
     final token = authProvider.authToken;
 
@@ -59,23 +91,24 @@ class PatientProvider with ChangeNotifier {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:3001/pacientes'),
+        Uri.parse('http://localhost:3001/paciente'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
           },
         body: jsonEncode({
-          'name': patient.name,
+          'nome': patient.name,
           'cpf': patient.cpf,
-          'dateOfBirth': patient.dateOfBirth,
-          'guardianName': patient.guardianName,
-          'notes': patient.notes,
+          'nomeResponsavel': patient.guardianName,
+          'dataNascimento': patient.dateOfBirth,
+          'notas': patient.notes,
         }),
       );
 
       if (response.statusCode == 201) {
         debugPrint('Paciente criado com sucesso!');
         notifyListeners();
+        fetchPatients();
         return true;
       } else {
         debugPrint('Erro ao criar paciente: ${response.statusCode}');
@@ -98,23 +131,24 @@ class PatientProvider with ChangeNotifier {
 
     try {
       final response = await http.put(
-        Uri.parse('http://localhost:3001/pacientes/$id'),
+        Uri.parse('http://localhost:3001/paciente/$id'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
           },
         body: jsonEncode({
-          'name': updatedPatient.name,
+          'nome': updatedPatient.name,
           'cpf': updatedPatient.cpf,
-          'dateOfBirth': updatedPatient.dateOfBirth,
-          'guardianName': updatedPatient.guardianName,
-          'notes': updatedPatient.notes,
+          'nomeResponsavel': updatedPatient.guardianName,
+          'dataNascimento': updatedPatient.dateOfBirth,
+          'notas': updatedPatient.notes,
         }),
       );
 
       if (response.statusCode == 200) {
         debugPrint('Paciente atualizado com sucesso!');
         notifyListeners();
+        fetchPatients();
         return true;
       } else {
         debugPrint('Erro ao atualizar paciente: ${response.statusCode}');
@@ -137,7 +171,7 @@ class PatientProvider with ChangeNotifier {
 
     try {
       final response = await http.delete(
-        Uri.parse('http://localhost:3001/pacientes/$id'),
+        Uri.parse('http://localhost:3001/paciente/$id'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -147,6 +181,7 @@ class PatientProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         debugPrint('Paciente deletado com sucesso!');
         notifyListeners();
+        fetchPatients();
         return true;
       } else {
         debugPrint('Erro ao deletar paciente: ${response.statusCode}');
