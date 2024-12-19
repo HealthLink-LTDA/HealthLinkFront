@@ -7,7 +7,6 @@ class Record {
   final int respiratorio;
   final bool nebulizacaoResgate;
   final bool vomitoPersistente;
-  final String date;
 
   Record({
     required this.id,
@@ -18,20 +17,18 @@ class Record {
     required this.respiratorio,
     required this.nebulizacaoResgate,
     required this.vomitoPersistente,
-    required this.date,
   });
 
   factory Record.fromJson(Map<String, dynamic> json) {
     return Record(
       id: json['id'] as String,
-      pacienteId: json['pacienteId'] as String,
-      enfermeiraId: json['enfermeiraId'] as String,
+      pacienteId: json['paciente'] as String,
+      enfermeiraId: json['enfermeira'] as String,
       neurologico: json['neurologico'] as int,
       cardioVascular: json['cardioVascular'] as int,
       respiratorio: json['respiratorio'] as int,
       nebulizacaoResgate: json['nebulizacaoResgate'] as bool,
       vomitoPersistente: json['vomitoPersistente'] as bool,
-      date: json['date'] as String,
     );
   }
 }

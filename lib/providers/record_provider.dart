@@ -28,7 +28,7 @@ class RecordProvider with ChangeNotifier {
         'Authorization': 'Bearer $token',
       });
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
         List<Record> records = data.map((recordJson) => Record.fromJson(recordJson)).toList();
 
@@ -37,6 +37,38 @@ class RecordProvider with ChangeNotifier {
 
         notifyListeners();
         return records;
+      } else {
+        debugPrint('Erro ao encontrar as triagens: ${response.statusCode}');
+        debugPrint(response.body);
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Erro ao fazer o request: $e');
+      return null;
+    }
+  }
+
+  Future<Record?> fetchRecordsById(String id) async {
+    final token = authProvider.authToken;
+
+    if (token == null) {
+      debugPrint('Erro: Usuário não autenticado.');
+      return null;
+    }
+
+    try {
+      final response = await http.get(Uri.parse('http://localhost:3001/triagem/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      });
+
+      if (response.statusCode == 200) {
+        dynamic data = jsonDecode(response.body);
+        Record record = data.map((recordJson) => Record.fromJson(recordJson)).toList();
+
+        notifyListeners();
+        return record;
       } else {
         debugPrint('Erro ao encontrar as triagens: ${response.statusCode}');
         debugPrint(response.body);
@@ -64,8 +96,8 @@ class RecordProvider with ChangeNotifier {
         'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
-          'pacienteId': record.pacienteId,
-          'enfermeiraId': record.enfermeiraId,
+          'paciente': record.pacienteId,
+          'enfermeira': record.enfermeiraId,
           'neurologico': record.neurologico,
           'cardioVascular': record.cardioVascular,
           'respiratorio': record.respiratorio,
@@ -74,7 +106,7 @@ class RecordProvider with ChangeNotifier {
         }),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         debugPrint('Triagem criada com sucesso!');
         notifyListeners();
         return true;
@@ -99,7 +131,7 @@ class RecordProvider with ChangeNotifier {
 
     try {
       final response = await http.put(
-        Uri.parse('http://localhost:3001/triagem'),
+        Uri.parse('http://localhost:3001/triagem/$id'),
         headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -115,7 +147,7 @@ class RecordProvider with ChangeNotifier {
         }),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         debugPrint('Triagem atualizada com sucesso!');
         notifyListeners();
         return true;
