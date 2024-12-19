@@ -22,7 +22,7 @@ class User {
       email: json['email'] as String,
       password: json['senha'] as String,
       crm: json['crm'] as String?,
-      role: json['cargoId'] as int,
+      role: json['cargo']['id'] as int,
     );
   }
 }

@@ -19,6 +19,32 @@ class _TeamScreenState extends State<TeamScreen> {
   int _selectedRole = 1;
   User? _editingMember;
 
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTeamMembers(); // Fetch team members when the screen loads
+  }
+
+  Future<void> _fetchTeamMembers() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final provider = Provider.of<UserProvider>(context, listen: false);
+    final success = await provider.fetchTeamMembers();
+
+    setState(() {
+      _isLoading = false;
+      if (!success) {
+        _errorMessage = 'Failed to load team members. Please check your network or API.';
+      }
+    });
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -47,7 +73,7 @@ class _TeamScreenState extends State<TeamScreen> {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
+        builder: (context, setStateDialog) => AlertDialog(
           title: Text(user == null ? 'Add Team Member' : 'Edit Team Member'),
           content: SingleChildScrollView(
             child: Form(
@@ -98,7 +124,7 @@ class _TeamScreenState extends State<TeamScreen> {
                       DropdownMenuItem(value: 4, child: Text('Technician')),
                     ],
                     onChanged: (value) {
-                      setState(() {
+                      setStateDialog(() {
                         _selectedRole = value!;
                         if (_selectedRole != 2) {
                           _crmController.clear();
@@ -150,65 +176,35 @@ class _TeamScreenState extends State<TeamScreen> {
             ElevatedButton(
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
+                  final provider = Provider.of<UserProvider>(context, listen: false);
                   if (_editingMember == null) {
-                    final user = User(
-                      id: DateTime.now().toString(),
-                      name: _nameController.text,
-                      email: _emailController.text,
-                      role: _selectedRole,
-                      password: _passwordController.text,
-                      crm: _selectedRole == 2 ? _crmController.text : null,
+                    provider.addTeamMember(
+                      User(
+                        id: DateTime.now().toString(),
+                        name: _nameController.text,
+                        email: _emailController.text,
+                        role: _selectedRole,
+                        password: _passwordController.text,
+                        crm: _selectedRole == 2 ? _crmController.text : null,
+                      ),
                     );
-                    context.read<UserProvider>().addTeamMember(user);
-                    Navigator.pop(context);
                   } else {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Confirm Edit'),
-                        content: Text(
-                            'Do you want to save the changes for ${_nameController.text}?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancel'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              final updatedUser = User(
-                                id: _editingMember!.id,
-                                name: _nameController.text,
-                                email: _editingMember!.email,
-                                role: _selectedRole,
-                                password: _passwordController.text,
-                                crm: _selectedRole == 2
-                                    ? _crmController.text
-                                    : null,
-                              );
-
-                              context.read<UserProvider>().updateTeamMember(
-                                    _editingMember!.id,
-                                    updatedUser,
-                                  );
-
-                              Navigator.pop(
-                                  context); // Fecha o diálogo de confirmação
-                              Navigator.pop(
-                                  context); // Fecha o diálogo de edição
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text('Save Changes'),
-                          ),
-                        ],
+                    provider.updateTeamMember(
+                      _editingMember!.id,
+                      User(
+                        id: _editingMember!.id,
+                        name: _nameController.text,
+                        email: _editingMember!.email,
+                        role: _selectedRole,
+                        password: _passwordController.text,
+                        crm: _selectedRole == 2 ? _crmController.text : null,
                       ),
                     );
                   }
+                  Navigator.pop(context);
                 }
               },
-              child: Text(_editingMember == null ? 'Add' : 'Save'),
+              child: Text(_editingMember == null ? 'Add' : 'Update'),
             ),
           ],
         ),
@@ -221,8 +217,7 @@ class _TeamScreenState extends State<TeamScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirm Deletion'),
-        content: Text(
-            'Are you sure you want to remove ${member.name} from the team?'),
+        content: Text('Are you sure you want to remove ${member.name} from the team?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -230,62 +225,16 @@ class _TeamScreenState extends State<TeamScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              context.read<UserProvider>().deleteTeamMember(member.id);
+              final provider = Provider.of<UserProvider>(context, listen: false);
+              provider.deleteTeamMember(member.id);
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Delete'),
           ),
         ],
       ),
     );
-  }
-
-  void _handleUpdate(BuildContext context) {
-    if (_formKey.currentState!.validate()) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Confirm Update'),
-          content: Text(
-              'Are you sure you want to update ${_nameController.text}\'s information?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final updatedUser = User(
-                  id: _editingMember!.id,
-                  name: _nameController.text,
-                  email: _editingMember!.email,
-                  role: _selectedRole,
-                  password: _passwordController.text,
-                  crm: _selectedRole == 2 ? _crmController.text : null,
-                );
-
-                context.read<UserProvider>().updateTeamMember(
-                      _editingMember!.id,
-                      updatedUser,
-                    );
-
-                Navigator.pop(context); // Fecha o diálogo de confirmação
-                Navigator.pop(context); // Fecha o diálogo de edição
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Confirm Update'),
-            ),
-          ],
-        ),
-      );
-    }
   }
 
   String getRoleText(int role) {
@@ -309,61 +258,75 @@ class _TeamScreenState extends State<TeamScreen> {
       appBar: AppBar(
         title: const Text('Medical Team'),
       ),
-      body: Consumer<UserProvider>(
-        builder: (context, provider, _) {
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: provider.team.length,
-            itemBuilder: (context, index) {
-              final member = provider.team[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage != null
+              ? Center(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        member.name,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.red),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        getRoleText(member.role),
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      Text(member.email),
-                      if (member.role == 2 && member.crm != null)
-                        Text('CRM: ${member.crm}'),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined),
-                            onPressed: () =>
-                                _showAddEditDialog(context, member),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline),
-                            onPressed: () =>
-                                _showDeleteConfirmation(context, member),
-                          ),
-                        ],
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchTeamMembers,
+                        child: const Text('Retry'),
                       ),
                     ],
                   ),
+                )
+              : Consumer<UserProvider>(
+                  builder: (context, provider, _) {
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: provider.team.length,
+                      itemBuilder: (context, index) {
+                        final member = provider.team[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  member.name,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(getRoleText(member.role)),
+                                Text(member.email),
+                                if (member.role == 2 && member.crm != null)
+                                  Text('CRM: ${member.crm}'),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit_outlined),
+                                      onPressed: () =>
+                                          _showAddEditDialog(context, member),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline),
+                                      onPressed: () =>
+                                          _showDeleteConfirmation(context, member),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
-              );
-            },
-          );
-        },
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEditDialog(context),
         child: const Icon(Icons.add),

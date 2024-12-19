@@ -28,6 +28,17 @@ class _PatientsScreenState extends State<PatientsScreen> {
   Patient? _editingPatient;
 
   @override
+  void initState() {
+    super.initState();
+    _fetchPatients(); // Busca os pacientes ao entrar na tela
+  }
+
+  void _fetchPatients() {
+    final provider = Provider.of<PatientProvider>(context, listen: false);
+    provider.fetchPatients();
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _cpfController.dispose();
@@ -152,8 +163,8 @@ class _PatientsScreenState extends State<PatientsScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              if (_editingPatient == null) {
-                if (_formKey.currentState!.validate()) {
+              if (_formKey.currentState!.validate()) {
+                if (_editingPatient == null) {
                   final patient = Patient(
                     id: DateTime.now().toString(),
                     name: _nameController.text,
@@ -164,84 +175,27 @@ class _PatientsScreenState extends State<PatientsScreen> {
                   );
                   context.read<PatientProvider>().addPatient(patient);
                   Navigator.pop(context);
+                } else {
+                  // Atualização
+                  final updatedPatient = Patient(
+                    id: _editingPatient!.id,
+                    name: _nameController.text,
+                    cpf: _cpfController.text,
+                    dateOfBirth: _dateController.text,
+                    guardianName: _guardianController.text,
+                    notes: _notesController.text,
+                  );
+
+                  context.read<PatientProvider>().updatePatient(
+                        _editingPatient!.id,
+                        updatedPatient,
+                      );
+
+                  Navigator.pop(context);
                 }
-              } else {
-                _showUpdateConfirmation(context, _editingPatient!);
               }
             },
             child: Text(_editingPatient == null ? 'Add' : 'Update'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteConfirmation(BuildContext context, Patient patient) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Deletion'),
-        content: Text(
-            'Are you sure you want to remove ${patient.name} from patients?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              context.read<PatientProvider>().deletePatient(patient.id);
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showUpdateConfirmation(BuildContext context, Patient patient) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Update'),
-        content: Text(
-            'Are you sure you want to update ${patient.name}\'s information?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                final updatedPatient = Patient(
-                  id: _editingPatient!.id,
-                  name: _nameController.text,
-                  cpf: _cpfController.text,
-                  dateOfBirth: _dateController.text,
-                  guardianName: _guardianController.text,
-                  notes: _notesController.text,
-                );
-
-                context.read<PatientProvider>().updatePatient(
-                      _editingPatient!.id,
-                      updatedPatient,
-                    );
-
-                Navigator.pop(context); // Fecha o diálogo de confirmação
-                Navigator.pop(context); // Fecha o diálogo de edição
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Update'),
           ),
         ],
       ),
@@ -256,6 +210,9 @@ class _PatientsScreenState extends State<PatientsScreen> {
       ),
       body: Consumer<PatientProvider>(
         builder: (context, provider, _) {
+          if (provider.patients.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: provider.patients.length,
@@ -278,14 +235,6 @@ class _PatientsScreenState extends State<PatientsScreen> {
                       const SizedBox(height: 8),
                       Text('CPF: ${patient.cpf}'),
                       Text('Guardian: ${patient.guardianName}'),
-                      Text(
-                        'Born: ${DateFormat('MM/dd/yyyy').format(DateTime.parse(patient.dateOfBirth))}',
-                      ),
-                      if (patient.notes != null &&
-                          patient.notes!.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(patient.notes!),
-                      ],
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -297,8 +246,9 @@ class _PatientsScreenState extends State<PatientsScreen> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete_outline),
-                            onPressed: () =>
-                                _showDeleteConfirmation(context, patient),
+                            onPressed: () => context
+                                .read<PatientProvider>()
+                                .deletePatient(patient.id),
                           ),
                         ],
                       ),
