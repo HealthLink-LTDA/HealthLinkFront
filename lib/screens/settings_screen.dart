@@ -9,7 +9,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: const Text('Configurações'),
       ),
       body: Consumer<AuthProvider>(
         builder: (context, auth, _) {
@@ -19,7 +19,7 @@ class SettingsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Current User',
+                  'Usuário Atual',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -33,13 +33,13 @@ class SettingsScreen extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () => auth.logout(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('Sign Out'),
+                    child: const Text('Sair'),
                   ),
                 ),
               ],

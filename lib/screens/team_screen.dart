@@ -48,7 +48,9 @@ class _TeamScreenState extends State<TeamScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text(user == null ? 'Add Team Member' : 'Edit Team Member'),
+          title: Text(user == null
+              ? 'Adicionar Membro da Equipe'
+              : 'Editar Membro da Equipe'),
           content: SingleChildScrollView(
             child: Form(
               key: _formKey,
@@ -58,12 +60,12 @@ class _TeamScreenState extends State<TeamScreen> {
                   TextFormField(
                     controller: _nameController,
                     decoration: const InputDecoration(
-                      labelText: 'Full Name',
+                      labelText: 'Nome Completo',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter full name';
+                        return 'Por favor, insira o nome completo';
                       }
                       return null;
                     },
@@ -79,7 +81,7 @@ class _TeamScreenState extends State<TeamScreen> {
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter email';
+                          return 'Por favor, insira o e-mail';
                         }
                         return null;
                       },
@@ -88,7 +90,7 @@ class _TeamScreenState extends State<TeamScreen> {
                   DropdownButtonFormField<int>(
                     value: _selectedRole,
                     decoration: const InputDecoration(
-                      labelText: 'Role',
+                      labelText: 'Cargo',
                       border: OutlineInputBorder(),
                     ),
                     items: const [
@@ -117,7 +119,7 @@ class _TeamScreenState extends State<TeamScreen> {
                       validator: (value) {
                         if (_selectedRole == 2 &&
                             (value == null || value.isEmpty)) {
-                          return 'Please enter CRM';
+                          return 'Por favor, insira o CRM';
                         }
                         return null;
                       },
@@ -126,14 +128,14 @@ class _TeamScreenState extends State<TeamScreen> {
                   TextFormField(
                     controller: _passwordController,
                     decoration: const InputDecoration(
-                      labelText: 'Password',
+                      labelText: 'Senha',
                       border: OutlineInputBorder(),
                     ),
                     obscureText: true,
                     validator: (value) {
                       if (_editingMember == null &&
                           (value == null || value.isEmpty)) {
-                        return 'Please enter password';
+                        return 'Por favor, insira a senha';
                       }
                       return null;
                     },
@@ -145,7 +147,7 @@ class _TeamScreenState extends State<TeamScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: const Text('Cancelar'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -165,13 +167,13 @@ class _TeamScreenState extends State<TeamScreen> {
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text('Confirm Edit'),
+                        title: const Text('Confirmar Edição'),
                         content: Text(
-                            'Do you want to save the changes for ${_nameController.text}?'),
+                            'Deseja salvar as alterações para ${_nameController.text}?'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancel'),
+                            child: const Text('Cancelar'),
                           ),
                           ElevatedButton(
                             onPressed: () {
@@ -200,7 +202,7 @@ class _TeamScreenState extends State<TeamScreen> {
                               backgroundColor: Colors.blue,
                               foregroundColor: Colors.white,
                             ),
-                            child: const Text('Save Changes'),
+                            child: const Text('Salvar Alterações'),
                           ),
                         ],
                       ),
@@ -208,7 +210,7 @@ class _TeamScreenState extends State<TeamScreen> {
                   }
                 }
               },
-              child: Text(_editingMember == null ? 'Add' : 'Save'),
+              child: Text(_editingMember == null ? 'Adicionar' : 'Salvar'),
             ),
           ],
         ),
@@ -220,13 +222,13 @@ class _TeamScreenState extends State<TeamScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Deletion'),
-        content: Text(
-            'Are you sure you want to remove ${member.name} from the team?'),
+        title: const Text('Confirmar Exclusão'),
+        content:
+            Text('Tem certeza que deseja remover ${member.name} da equipe?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Cancelar'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -237,7 +239,7 @@ class _TeamScreenState extends State<TeamScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Delete'),
+            child: const Text('Excluir'),
           ),
         ],
       ),
@@ -249,13 +251,13 @@ class _TeamScreenState extends State<TeamScreen> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Confirm Update'),
+          title: const Text('Confirmar Atualização'),
           content: Text(
-              'Are you sure you want to update ${_nameController.text}\'s information?'),
+              'Tem certeza que deseja atualizar as informações de ${_nameController.text}?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: const Text('Cancelar'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -280,7 +282,7 @@ class _TeamScreenState extends State<TeamScreen> {
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Confirm Update'),
+              child: const Text('Confirmar Atualização'),
             ),
           ],
         ),
@@ -293,13 +295,13 @@ class _TeamScreenState extends State<TeamScreen> {
       case 1:
         return 'Admin';
       case 2:
-        return 'Doctor';
+        return 'Médico';
       case 3:
-        return 'Nurse';
+        return 'Enfermeiro';
       case 4:
-        return 'Technician';
+        return 'Técnico';
       default:
-        return 'Unknown';
+        return 'Desconhecido';
     }
   }
 
@@ -307,7 +309,7 @@ class _TeamScreenState extends State<TeamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medical Team'),
+        title: const Text('Equipe Médica'),
       ),
       body: Consumer<UserProvider>(
         builder: (context, provider, _) {
