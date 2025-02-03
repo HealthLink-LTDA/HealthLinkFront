@@ -36,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       } else {
-        _showErrorDialog('Login failed', 'Invalid email or password.');
+        _showErrorDialog('O login falhou.', 'E-mail ou senha incorretos.');
       }
     }
   }
@@ -87,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text(
-                          'Welcome Back',
+                          'Bem vindo de volta!',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -95,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Sign in to your account',
+                          'Entre em sua conta',
                           style: TextStyle(
                             color: Colors.grey,
                           ),
@@ -107,13 +107,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             labelText: 'Email',
                             prefixIcon: Icon(Icons.email_outlined),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(12)),
                             ),
                           ),
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter your email';
+                              return 'Por favor, insira seu e-mail';
                             }
                             return null;
                           },
@@ -122,16 +123,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextFormField(
                           controller: _passwordController,
                           decoration: const InputDecoration(
-                            labelText: 'Password',
+                            labelText: 'Senha',
                             prefixIcon: Icon(Icons.lock_outline),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(12)),
                             ),
                           ),
                           obscureText: true,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter your password';
+                              return 'Por favor, insira sua senha';
                             }
                             return null;
                           },
@@ -148,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             child: const Text(
-                              'Sign In',
+                              'Entrar',
                               style: TextStyle(fontSize: 16),
                             ),
                           ),

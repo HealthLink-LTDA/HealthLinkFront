@@ -198,8 +198,9 @@ class _RecordsScreenState extends State<RecordsScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) => AlertDialog(
-          title: Text(
-              record == null ? 'Add Medical Record' : 'Edit Medical Record'),
+          title: Text(record == null
+              ? 'Adicionar Registro Médico'
+              : 'Editar Registro Médico'),
           content: SingleChildScrollView(
             child: Form(
               key: _formKey,
@@ -209,7 +210,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
                   DropdownButtonFormField<String>(
                     value: _selectedPatientId,
                     decoration: const InputDecoration(
-                      labelText: 'Patient',
+                      labelText: 'Paciente',
                       border: OutlineInputBorder(),
                     ),
                     items: _mockPatients.map((patient) {
@@ -225,7 +226,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
                     },
                     validator: (value) {
                       if (value == null) {
-                        return 'Please select a patient';
+                        return 'Por favor, selecione um paciente';
                       }
                       return null;
                     },
@@ -234,7 +235,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
                   DropdownButtonFormField<String>(
                     value: _selectedDoctorId,
                     decoration: const InputDecoration(
-                      labelText: 'Doctor',
+                      labelText: 'Enfermeira',
                       border: OutlineInputBorder(),
                     ),
                     items: _mockDoctors.map((doctor) {
@@ -250,7 +251,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
                     },
                     validator: (value) {
                       if (value == null) {
-                        return 'Please select a doctor';
+                        return 'Por favor, selecione uma enfermeira';
                       }
                       return null;
                     },
@@ -310,7 +311,6 @@ class _RecordsScreenState extends State<RecordsScreen> {
                       respiratorio: _respiratorio,
                       nebulizacaoResgate: _nebulizacaoResgate,
                       vomitoPersistente: _vomitoPersistente,
-                      date: DateTime.now().toString(),
                     );
                     setState(() {
                       _records.add(record);
@@ -321,7 +321,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
                   }
                 }
               },
-              child: Text(_editingRecord == null ? 'Add' : 'Update'),
+              child: Text(_editingRecord == null ? 'Adicionar' : 'Atualizar'),
             ),
           ],
         ),
@@ -333,13 +333,13 @@ class _RecordsScreenState extends State<RecordsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Update'),
-        content:
-            const Text('Are you sure you want to update this medical record?'),
+        title: const Text('Confirmar Atualização'),
+        content: const Text(
+            'Tem certeza que deseja atualizar este registro médico?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Cancelar'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -352,7 +352,6 @@ class _RecordsScreenState extends State<RecordsScreen> {
                 respiratorio: _respiratorio,
                 nebulizacaoResgate: _nebulizacaoResgate,
                 vomitoPersistente: _vomitoPersistente,
-                date: _editingRecord!.date,
               );
 
               setState(() {
@@ -366,7 +365,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('Confirm'),
+            child: const Text('Confirmar'),
           ),
         ],
       ),
@@ -377,13 +376,13 @@ class _RecordsScreenState extends State<RecordsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Deletion'),
+        title: const Text('Confirmar Exclusão'),
         content:
-            const Text('Are you sure you want to delete this medical record?'),
+            const Text('Tem certeza que deseja excluir este registro médico?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Cancelar'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -396,7 +395,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Delete'),
+            child: const Text('Excluir'),
           ),
         ],
       ),
@@ -407,7 +406,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medical Records'),
+        title: const Text('Registros Médicos'),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -432,21 +431,16 @@ class _RecordsScreenState extends State<RecordsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Patient: ${patient['name']}',
+                        'Paciente: ${patient['name']}',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text(
-                        DateFormat('MM/dd/yyyy').format(
-                          DateTime.parse(record.date),
-                        ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Doctor: ${doctor['name']}'),
+                  Text('Enfermeira: ${doctor['name']}'),
                   const SizedBox(height: 8),
                   Container(
                     padding:
