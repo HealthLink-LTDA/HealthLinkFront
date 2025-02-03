@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:medical_app/models/record.dart';
+import 'package:medical_app/providers/record_provider.dart';
 import 'package:intl/intl.dart';
 
 class RecordsScreen extends StatefulWidget {
@@ -15,23 +17,22 @@ class _RecordsScreenState extends State<RecordsScreen> {
   String? _selectedDoctorId;
   Record? _editingRecord;
 
-  // Dados mockados para teste
-  final List<Record> _records = [];
-  final List<Map<String, String>> _mockPatients = [
-    {'id': '1', 'name': 'João Silva'},
-    {'id': '2', 'name': 'Maria Santos'},
-  ];
-  final List<Map<String, String>> _mockDoctors = [
-    {'id': '1', 'name': 'Dr. Carlos'},
-    {'id': '2', 'name': 'Dra. Ana'},
-  ];
-
-  // Valores para as avaliações
   int _neurologico = 0;
   int _cardioVascular = 0;
   int _respiratorio = 0;
   bool _nebulizacaoResgate = false;
   bool _vomitoPersistente = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRecords(); // Busca os registros ao entrar na tela
+  }
+
+  void _fetchRecords() {
+    final provider = Provider.of<RecordProvider>(context, listen: false);
+    provider.fetchRecords();
+  }
 
   int get totalPontos =>
       _neurologico +
@@ -39,140 +40,6 @@ class _RecordsScreenState extends State<RecordsScreen> {
       _respiratorio +
       (_nebulizacaoResgate ? 3 : 0) +
       (_vomitoPersistente ? 3 : 0);
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  Widget _buildAvaliacaoNeurologica(StateSetter setState) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Avaliação Neurológica',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        RadioListTile<int>(
-          title: const Text('Ativo'),
-          value: 0,
-          groupValue: _neurologico,
-          onChanged: (value) => setState(() => _neurologico = value!),
-        ),
-        RadioListTile<int>(
-          title: const Text('Sonolento'),
-          value: 1,
-          groupValue: _neurologico,
-          onChanged: (value) => setState(() => _neurologico = value!),
-        ),
-        RadioListTile<int>(
-          title: const Text('Irritado'),
-          value: 2,
-          groupValue: _neurologico,
-          onChanged: (value) => setState(() => _neurologico = value!),
-        ),
-        RadioListTile<int>(
-          title:
-              const Text('Letárgico / Obnubilado ou resposta reduzida à dor'),
-          value: 3,
-          groupValue: _neurologico,
-          onChanged: (value) => setState(() => _neurologico = value!),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAvaliacaoCardiovascular(StateSetter setState) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Avaliação Cardiovascular',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        RadioListTile<int>(
-          title: const Text('Corado ou TEC 1-2 seg'),
-          value: 0,
-          groupValue: _cardioVascular,
-          onChanged: (value) => setState(() => _cardioVascular = value!),
-        ),
-        RadioListTile<int>(
-          title: const Text(
-              'Pálido ou TEC 3 seg ou FC acima do limite superior para a idade'),
-          value: 1,
-          groupValue: _cardioVascular,
-          onChanged: (value) => setState(() => _cardioVascular = value!),
-        ),
-        RadioListTile<int>(
-          title: const Text(
-              'Moteado ou TEC 4 seg ou FC ≥ 20 bpm acima do limite superior para a idade'),
-          value: 2,
-          groupValue: _cardioVascular,
-          onChanged: (value) => setState(() => _cardioVascular = value!),
-        ),
-        RadioListTile<int>(
-          title: const Text(
-              'Acinzentado/cianótico ou TEC ≥ 5 seg ou FC ≥ 30 bpm acima do limite ou bradicardia'),
-          value: 3,
-          groupValue: _cardioVascular,
-          onChanged: (value) => setState(() => _cardioVascular = value!),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAvaliacaoRespiratoria(StateSetter setState) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Avaliação Respiratória',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        RadioListTile<int>(
-          title: const Text('FR normal para a idade, sem retração'),
-          value: 0,
-          groupValue: _respiratorio,
-          onChanged: (value) => setState(() => _respiratorio = value!),
-        ),
-        RadioListTile<int>(
-          title: const Text('FR acima do limite superior para a idade...'),
-          value: 1,
-          groupValue: _respiratorio,
-          onChanged: (value) => setState(() => _respiratorio = value!),
-        ),
-        RadioListTile<int>(
-          title: const Text('FR ≥ 20 rpm acima do limite superior...'),
-          value: 2,
-          groupValue: _respiratorio,
-          onChanged: (value) => setState(() => _respiratorio = value!),
-        ),
-        RadioListTile<int>(
-          title: const Text('FR ≥ 5 rpm abaixo do limite inferior...'),
-          value: 3,
-          groupValue: _respiratorio,
-          onChanged: (value) => setState(() => _respiratorio = value!),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOutrasAvaliacoes(StateSetter setState) {
-    return Column(
-      children: [
-        CheckboxListTile(
-          title: const Text('Nebulização de resgate em 15 minutos'),
-          value: _nebulizacaoResgate,
-          onChanged: (value) => setState(() => _nebulizacaoResgate = value!),
-        ),
-        CheckboxListTile(
-          title: const Text('3 episódios ou mais de emese no pós operatório'),
-          value: _vomitoPersistente,
-          onChanged: (value) => setState(() => _vomitoPersistente = value!),
-        ),
-      ],
-    );
-  }
 
   void _showAddEditDialog(BuildContext context, [Record? record]) {
     _editingRecord = record;
@@ -198,97 +65,97 @@ class _RecordsScreenState extends State<RecordsScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) => AlertDialog(
-          title: Text(record == null
-              ? 'Adicionar Registro Médico'
-              : 'Editar Registro Médico'),
+          title: Text(
+              record == null ? 'Add Medical Record' : 'Edit Medical Record'),
           content: SingleChildScrollView(
             child: Form(
               key: _formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  DropdownButtonFormField<String>(
-                    value: _selectedPatientId,
+                  TextFormField(
                     decoration: const InputDecoration(
-                      labelText: 'Paciente',
+                      labelText: 'Patient ID',
                       border: OutlineInputBorder(),
                     ),
-                    items: _mockPatients.map((patient) {
-                      return DropdownMenuItem(
-                        value: patient['id'],
-                        child: Text(patient['name']!),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setStateDialog(() {
-                        _selectedPatientId = value;
-                      });
-                    },
+                    initialValue: _selectedPatientId,
+                    onChanged: (value) =>
+                        setStateDialog(() => _selectedPatientId = value),
                     validator: (value) {
-                      if (value == null) {
-                        return 'Por favor, selecione um paciente';
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a valid Patient ID';
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: _selectedDoctorId,
+                  TextFormField(
                     decoration: const InputDecoration(
-                      labelText: 'Enfermeira',
+                      labelText: 'Doctor ID',
                       border: OutlineInputBorder(),
                     ),
-                    items: _mockDoctors.map((doctor) {
-                      return DropdownMenuItem(
-                        value: doctor['id'],
-                        child: Text(doctor['name']!),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedDoctorId = value;
-                      });
-                    },
+                    initialValue: _selectedDoctorId,
+                    onChanged: (value) =>
+                        setStateDialog(() => _selectedDoctorId = value),
                     validator: (value) {
-                      if (value == null) {
-                        return 'Por favor, selecione uma enfermeira';
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a valid Doctor ID';
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    margin: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Total de Pontos: ',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          '$totalPontos',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+                  const Text(
+                    'Neurological Evaluation',
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  _buildAvaliacaoNeurologica(setStateDialog),
-                  const SizedBox(height: 16),
-                  _buildAvaliacaoCardiovascular(setStateDialog),
-                  const SizedBox(height: 16),
-                  _buildAvaliacaoRespiratoria(setStateDialog),
-                  const SizedBox(height: 16),
-                  _buildOutrasAvaliacoes(setStateDialog),
-                  const SizedBox(height: 16),
+                  Slider(
+                    value: _neurologico.toDouble(),
+                    min: 0,
+                    max: 3,
+                    divisions: 3,
+                    label: '$_neurologico',
+                    onChanged: (value) =>
+                        setStateDialog(() => _neurologico = value.toInt()),
+                  ),
+                  const Text(
+                    'Cardiovascular Evaluation',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Slider(
+                    value: _cardioVascular.toDouble(),
+                    min: 0,
+                    max: 3,
+                    divisions: 3,
+                    label: '$_cardioVascular',
+                    onChanged: (value) =>
+                        setStateDialog(() => _cardioVascular = value.toInt()),
+                  ),
+                  const Text(
+                    'Respiratory Evaluation',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Slider(
+                    value: _respiratorio.toDouble(),
+                    min: 0,
+                    max: 3,
+                    divisions: 3,
+                    label: '$_respiratorio',
+                    onChanged: (value) =>
+                        setStateDialog(() => _respiratorio = value.toInt()),
+                  ),
+                  CheckboxListTile(
+                    title: const Text('Nebulization Rescue'),
+                    value: _nebulizacaoResgate,
+                    onChanged: (value) =>
+                        setStateDialog(() => _nebulizacaoResgate = value!),
+                  ),
+                  CheckboxListTile(
+                    title: const Text('Persistent Vomiting'),
+                    value: _vomitoPersistente,
+                    onChanged: (value) =>
+                        setStateDialog(() => _vomitoPersistente = value!),
+                  ),
                 ],
               ),
             ),
@@ -301,73 +168,43 @@ class _RecordsScreenState extends State<RecordsScreen> {
             ElevatedButton(
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
+                  final provider =
+                      Provider.of<RecordProvider>(context, listen: false);
                   if (_editingRecord == null) {
-                    final record = Record(
-                      id: DateTime.now().toString(),
-                      pacienteId: _selectedPatientId!,
-                      enfermeiraId: _selectedDoctorId!,
-                      neurologico: _neurologico,
-                      cardioVascular: _cardioVascular,
-                      respiratorio: _respiratorio,
-                      nebulizacaoResgate: _nebulizacaoResgate,
-                      vomitoPersistente: _vomitoPersistente,
+                    provider.addRecord(
+                      Record(
+                        id: DateTime.now().toString(),
+                        pacienteId: _selectedPatientId!,
+                        enfermeiraId: _selectedDoctorId!,
+                        neurologico: _neurologico,
+                        cardioVascular: _cardioVascular,
+                        respiratorio: _respiratorio,
+                        nebulizacaoResgate: _nebulizacaoResgate,
+                        vomitoPersistente: _vomitoPersistente,
+                      ),
                     );
-                    setState(() {
-                      _records.add(record);
-                    });
-                    Navigator.pop(context);
                   } else {
-                    _showUpdateConfirmation(context);
+                    provider.updateTriagem(
+                      _editingRecord!.id,
+                      Record(
+                        id: _editingRecord!.id,
+                        pacienteId: _selectedPatientId!,
+                        enfermeiraId: _selectedDoctorId!,
+                        neurologico: _neurologico,
+                        cardioVascular: _cardioVascular,
+                        respiratorio: _respiratorio,
+                        nebulizacaoResgate: _nebulizacaoResgate,
+                        vomitoPersistente: _vomitoPersistente,
+                      ),
+                    );
                   }
+                  Navigator.pop(context);
                 }
               },
-              child: Text(_editingRecord == null ? 'Adicionar' : 'Atualizar'),
+              child: Text(_editingRecord == null ? 'Add' : 'Update'),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showUpdateConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Atualização'),
-        content: const Text(
-            'Tem certeza que deseja atualizar este registro médico?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final updatedRecord = Record(
-                id: _editingRecord!.id,
-                pacienteId: _selectedPatientId!,
-                enfermeiraId: _selectedDoctorId!,
-                neurologico: _neurologico,
-                cardioVascular: _cardioVascular,
-                respiratorio: _respiratorio,
-                nebulizacaoResgate: _nebulizacaoResgate,
-                vomitoPersistente: _vomitoPersistente,
-              );
-
-              setState(() {
-                final index =
-                    _records.indexWhere((r) => r.id == _editingRecord!.id);
-                if (index != -1) {
-                  _records[index] = updatedRecord;
-                }
-              });
-
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text('Confirmar'),
-          ),
-        ],
       ),
     );
   }
@@ -376,26 +213,22 @@ class _RecordsScreenState extends State<RecordsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content:
-            const Text('Tem certeza que deseja excluir este registro médico?'),
+        title: const Text('Confirm Deletion'),
+        content: const Text('Are you sure you want to delete this record?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
-              setState(() {
-                _records.removeWhere((r) => r.id == record.id);
-              });
+              final provider =
+                  Provider.of<RecordProvider>(context, listen: false);
+              provider.deleteTriagem(record.id);
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Excluir'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -406,83 +239,54 @@ class _RecordsScreenState extends State<RecordsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registros Médicos'),
+        title: const Text('Medical Records'),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _records.length,
-        itemBuilder: (context, index) {
-          final record = _records[index];
-          final patient = _mockPatients.firstWhere(
-            (p) => p['id'] == record.pacienteId,
-          );
-          final doctor = _mockDoctors.firstWhere(
-            (d) => d['id'] == record.enfermeiraId,
-          );
-
-          return Card(
-            margin: const EdgeInsets.only(bottom: 16),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Consumer<RecordProvider>(
+        builder: (context, provider, _) {
+          if (provider.record.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: provider.record.length,
+            itemBuilder: (context, index) {
+              final record = provider.record[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Paciente: ${patient['name']}',
+                        'Patient ID: ${record.pacienteId}',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Enfermeira: ${doctor['name']}'),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Total de Pontos: ${record.neurologico + record.cardioVascular + record.respiratorio + (record.nebulizacaoResgate ? 3 : 0) + (record.vomitoPersistente ? 3 : 0)}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Avaliação Neurológica: ${record.neurologico} pontos'),
-                  Text(
-                      'Avaliação Cardiovascular: ${record.cardioVascular} pontos'),
-                  Text('Avaliação Respiratória: ${record.respiratorio} pontos'),
-                  Text(
-                      'Nebulização de resgate: ${record.nebulizacaoResgate ? "Sim" : "Não"}'),
-                  Text(
-                      'Vômito Persistente: ${record.vomitoPersistente ? "Sim" : "Não"}'),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit_outlined),
-                        onPressed: () => _showAddEditDialog(context, record),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: () =>
-                            _showDeleteConfirmation(context, record),
+                      Text('Doctor ID: ${record.enfermeiraId}'),
+                      Text('Total Points: $totalPontos'),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined),
+                            onPressed: () =>
+                                _showAddEditDialog(context, record),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () =>
+                                _showDeleteConfirmation(context, record),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           );
         },
       ),
