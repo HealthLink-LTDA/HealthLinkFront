@@ -28,6 +28,17 @@ class _PatientsScreenState extends State<PatientsScreen> {
   Patient? _editingPatient;
 
   @override
+  void initState() {
+    super.initState();
+    _fetchPatients(); // Busca os pacientes ao entrar na tela
+  }
+
+  void _fetchPatients() {
+    final provider = Provider.of<PatientProvider>(context, listen: false);
+    provider.fetchPatients();
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _cpfController.dispose();
@@ -56,7 +67,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(patient == null ? 'Adicionar Paciente' : 'Editar Paciente'),
+        title: Text(patient == null ? 'Add Patient' : 'Edit Patient'),
         content: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -66,12 +77,12 @@ class _PatientsScreenState extends State<PatientsScreen> {
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Nome do Paciente',
+                    labelText: 'Patient Name',
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Por favor, insira o nome do paciente';
+                      return 'Please enter patient name';
                     }
                     return null;
                   },
@@ -86,7 +97,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                   inputFormatters: [_cpfFormatter],
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Por favor, insira o CPF';
+                      return 'Please enter CPF';
                     }
                     return null;
                   },
@@ -95,7 +106,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                 TextFormField(
                   controller: _dateController,
                   decoration: const InputDecoration(
-                    labelText: 'Data de Nascimento',
+                    labelText: 'Date of Birth',
                     border: OutlineInputBorder(),
                   ),
                   readOnly: true,
@@ -113,7 +124,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Por favor, selecione a data de nascimento';
+                      return 'Please select date of birth';
                     }
                     return null;
                   },
@@ -122,12 +133,12 @@ class _PatientsScreenState extends State<PatientsScreen> {
                 TextFormField(
                   controller: _guardianController,
                   decoration: const InputDecoration(
-                    labelText: 'Nome do Responsável',
+                    labelText: 'Guardian Name',
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Por favor, insira o nome do responsável';
+                      return 'Please enter guardian name';
                     }
                     return null;
                   },
@@ -136,7 +147,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                 TextFormField(
                   controller: _notesController,
                   decoration: const InputDecoration(
-                    labelText: 'Anotações',
+                    labelText: 'Notes',
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 3,
@@ -148,12 +159,12 @@ class _PatientsScreenState extends State<PatientsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
-              if (_editingPatient == null) {
-                if (_formKey.currentState!.validate()) {
+              if (_formKey.currentState!.validate()) {
+                if (_editingPatient == null) {
                   final patient = Patient(
                     id: DateTime.now().toString(),
                     name: _nameController.text,
@@ -164,84 +175,27 @@ class _PatientsScreenState extends State<PatientsScreen> {
                   );
                   context.read<PatientProvider>().addPatient(patient);
                   Navigator.pop(context);
+                } else {
+                  // Atualização
+                  final updatedPatient = Patient(
+                    id: _editingPatient!.id,
+                    name: _nameController.text,
+                    cpf: _cpfController.text,
+                    dateOfBirth: _dateController.text,
+                    guardianName: _guardianController.text,
+                    notes: _notesController.text,
+                  );
+
+                  context.read<PatientProvider>().updatePatient(
+                        _editingPatient!.id,
+                        updatedPatient,
+                      );
+
+                  Navigator.pop(context);
                 }
-              } else {
-                _showUpdateConfirmation(context, _editingPatient!);
               }
             },
-            child: Text(_editingPatient == null ? 'Adicionar' : 'Atualizar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteConfirmation(BuildContext context, Patient patient) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: Text(
-            'Tem certeza que deseja remover ${patient.name} dos pacientes?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              context.read<PatientProvider>().deletePatient(patient.id);
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showUpdateConfirmation(BuildContext context, Patient patient) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Atualização'),
-        content: Text(
-            'Tem certeza que deseja atualizar as informações de ${patient.name}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                final updatedPatient = Patient(
-                  id: _editingPatient!.id,
-                  name: _nameController.text,
-                  cpf: _cpfController.text,
-                  dateOfBirth: _dateController.text,
-                  guardianName: _guardianController.text,
-                  notes: _notesController.text,
-                );
-
-                context.read<PatientProvider>().updatePatient(
-                      _editingPatient!.id,
-                      updatedPatient,
-                    );
-
-                Navigator.pop(context); // Fecha o diálogo de confirmação
-                Navigator.pop(context); // Fecha o diálogo de edição
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Atualizar'),
+            child: Text(_editingPatient == null ? 'Add' : 'Update'),
           ),
         ],
       ),
@@ -252,10 +206,13 @@ class _PatientsScreenState extends State<PatientsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pacientes'),
+        title: const Text('Patients'),
       ),
       body: Consumer<PatientProvider>(
         builder: (context, provider, _) {
+          if (provider.patients.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: provider.patients.length,
@@ -277,15 +234,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text('CPF: ${patient.cpf}'),
-                      Text('Responsável: ${patient.guardianName}'),
-                      Text(
-                        'Nascido em: ${DateFormat('MM/dd/yyyy').format(DateTime.parse(patient.dateOfBirth))}',
-                      ),
-                      if (patient.notes != null &&
-                          patient.notes!.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(patient.notes!),
-                      ],
+                      Text('Guardian: ${patient.guardianName}'),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -297,8 +246,9 @@ class _PatientsScreenState extends State<PatientsScreen> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete_outline),
-                            onPressed: () =>
-                                _showDeleteConfirmation(context, patient),
+                            onPressed: () => context
+                                .read<PatientProvider>()
+                                .deletePatient(patient.id),
                           ),
                         ],
                       ),

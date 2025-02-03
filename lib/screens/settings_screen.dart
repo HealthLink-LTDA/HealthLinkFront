@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:medical_app/providers/auth_provider.dart';
+import 'package:medical_app/screens/login_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -26,20 +27,30 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(auth.currentUser ?? ''),
+                Text(auth.currentUser ?? 'Nenhum usuário autenticado'),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => auth.logout(),
+                    onPressed: () {
+                      auth.logout(); // Remover o 'await' aqui
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginScreen()),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+                      backgroundColor: Theme.of(context).primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('Sair'),
+                    child: const Text(
+                      'Sair',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
               ],

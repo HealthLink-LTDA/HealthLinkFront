@@ -6,14 +6,16 @@ class AuthProvider with ChangeNotifier {
   bool _isLoggedIn = false;
   String? _currentUser;
   String? _authToken;
+  int? _userRole;
 
   bool get isLoggedIn => _isLoggedIn;
   String? get currentUser => _currentUser;
   String? get authToken => _authToken;
+  int? get userRole => _userRole;
 
   Future<bool> login(String email, String password) async {
     try {
-      final response = await http.post(
+      final loginResponse = await http.post(
         Uri.parse('http://localhost:3001/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -22,31 +24,43 @@ class AuthProvider with ChangeNotifier {
         }),
       );
 
-      if (response.statusCode == 200) {
-        final String? token = jsonDecode(response.body)['access_token'];
+      if (loginResponse.statusCode == 200) {
+        final String? token = jsonDecode(loginResponse.body)['access_token'];
 
         if (token != null) {
-          _isLoggedIn = true;
-          _currentUser = email;
-          _authToken = token;
-          notifyListeners();
-          return true;
+          final userResponse = await http.get(
+            Uri.parse('http://localhost:3001/funcionario/email/$email'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          );
+
+          if (userResponse.statusCode == 200) {
+            final userData = jsonDecode(userResponse.body);
+            _isLoggedIn = true;
+            _currentUser = email;
+            _authToken = token;
+            _userRole = userData['cargo']['id'];
+            notifyListeners();
+            return true;
+          }
         }
-      } else {
-        debugPrint('Login failed: ${response.statusCode} ${response.body}');
-        return false;
       }
+      debugPrint(
+          'Login failed: ${loginResponse.statusCode} ${loginResponse.body}');
+      return false;
     } catch (e) {
       debugPrint('Erro de login: $e');
       return false;
     }
-    return false;
   }
 
   void logout() {
     _isLoggedIn = false;
     _currentUser = null;
+    _authToken = null;
+    _userRole = null;
     notifyListeners();
   }
 }
-

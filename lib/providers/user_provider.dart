@@ -13,70 +13,41 @@ class UserProvider with ChangeNotifier {
 
   List<User> get team => List.unmodifiable(_team);
 
-  Future<List<User>?> fetchTeamMembers() async {
+  Future<bool> fetchTeamMembers() async {
     final token = authProvider.authToken;
 
     if (token == null) {
       debugPrint('Erro: Usuário não autenticado.');
-      return null;
+      return false;
     }
 
     try {
-      final response = await http.get(Uri.parse('http://localhost:3001/funcionario'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      });
+      final response = await http.get(
+        Uri.parse('http://localhost:3001/funcionario'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
 
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
-        List<User> users = data.map((userJson) => User.fromJson(userJson)).toList();
+        List<User> users =
+            data.map((userJson) => User.fromJson(userJson)).toList();
 
         _team.clear();
         _team.addAll(users);
 
         notifyListeners();
-        return users;
+        return true;
       } else {
         debugPrint('Erro ao encontrar os funcionários: ${response.statusCode}');
         debugPrint(response.body);
-        return null;
+        return false;
       }
     } catch (e) {
       debugPrint('Erro ao fazer o request: $e');
-      return null;
-    }
-  }
-
-  Future<User?> fetchTeamMemberById() async {
-    final token = authProvider.authToken;
-
-    if (token == null) {
-      debugPrint('Erro: Usuário não autenticado.');
-      return null;
-    }
-
-    try {
-      final response = await http.get(Uri.parse('http://localhost:3001/funcionario'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      });
-
-      if (response.statusCode == 200) {
-        dynamic data = jsonDecode(response.body);
-        User user = data.map((userJson) => User.fromJson(userJson)).toList();
-
-        notifyListeners();
-        return user;
-      } else {
-        debugPrint('Erro ao encontrar os funcionários: ${response.statusCode}');
-        debugPrint(response.body);
-        return null;
-      }
-    } catch (e) {
-      debugPrint('Erro ao fazer o request: $e');
-      return null;
+      return false;
     }
   }
 
@@ -94,7 +65,7 @@ class UserProvider with ChangeNotifier {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
-          },
+        },
         body: jsonEncode({
           'nome': user.name,
           'email': user.email,
@@ -106,8 +77,7 @@ class UserProvider with ChangeNotifier {
 
       if (response.statusCode == 201) {
         debugPrint('Funcionário criado com sucesso!');
-        notifyListeners();
-        fetchTeamMembers();
+        await fetchTeamMembers();
         return true;
       } else {
         debugPrint('Erro ao criar o funcionário: ${response.statusCode}');
@@ -120,7 +90,7 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateTeamMember(String id, User updatedUser) async{
+  Future<bool> updateTeamMember(String id, User updatedUser) async {
     final token = authProvider.authToken;
 
     if (token == null) {
@@ -130,11 +100,11 @@ class UserProvider with ChangeNotifier {
 
     try {
       final response = await http.put(
-        Uri.parse('http://localhost:3001/funcionario'),
+        Uri.parse('http://localhost:3001/funcionario/$id'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
-          },
+        },
         body: jsonEncode({
           'nome': updatedUser.name,
           'email': updatedUser.email,
@@ -146,8 +116,7 @@ class UserProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         debugPrint('Funcionário atualizado com sucesso!');
-        notifyListeners();
-        fetchTeamMembers();
+        await fetchTeamMembers();
         return true;
       } else {
         debugPrint('Erro ao atualizar o funcionário: ${response.statusCode}');
@@ -174,13 +143,12 @@ class UserProvider with ChangeNotifier {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
-          },
+        },
       );
 
       if (response.statusCode == 200) {
         debugPrint('Funcionário deletado com sucesso!');
-        notifyListeners();
-        fetchTeamMembers();
+        await fetchTeamMembers();
         return true;
       } else {
         debugPrint('Erro ao deletar funcionário: ${response.statusCode}');

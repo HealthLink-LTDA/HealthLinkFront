@@ -20,21 +20,27 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProxyProvider<AuthProvider, PatientProvider>(
-          create: (context) => PatientProvider(Provider.of<AuthProvider>(context, listen: false)),
-          update: (context, authProvider, previousPatientProvider) =>PatientProvider(authProvider),
+          create: (context) => PatientProvider(
+              Provider.of<AuthProvider>(context, listen: false)),
+          update: (context, authProvider, previousPatientProvider) =>
+              PatientProvider(authProvider),
         ),
         ChangeNotifierProxyProvider<AuthProvider, UserProvider>(
-          create: (context) => UserProvider(Provider.of<AuthProvider>(context, listen: false)),
-          update: (context, authProvider, previousUserProvider) =>UserProvider(authProvider),
+          create: (context) =>
+              UserProvider(Provider.of<AuthProvider>(context, listen: false)),
+          update: (context, authProvider, previousUserProvider) =>
+              UserProvider(authProvider),
         ),
         ChangeNotifierProxyProvider<AuthProvider, RecordProvider>(
-          create: (context) => RecordProvider(Provider.of<AuthProvider>(context, listen: false)),
-          update: (context, authProvider, previousRecordProvider) =>RecordProvider(authProvider),
+          create: (context) =>
+              RecordProvider(Provider.of<AuthProvider>(context, listen: false)),
+          update: (context, authProvider, previousRecordProvider) =>
+              RecordProvider(authProvider),
         ),
-
       ],
       child: MaterialApp(
         title: 'Medical App',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.cyan,
           scaffoldBackgroundColor: Colors.grey[50],
