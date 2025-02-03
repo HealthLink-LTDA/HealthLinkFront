@@ -160,4 +160,35 @@ class UserProvider with ChangeNotifier {
       return false;
     }
   }
+
+  Future<User?> fetchUserById(String id) async {
+    final token = authProvider.authToken;
+
+    if (token == null) {
+      debugPrint('Erro: Usuário não autenticado.');
+      return null;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:3001/funcionario/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return User.fromJson(data);
+      } else {
+        debugPrint('Erro ao encontrar o funcionário: ${response.statusCode}');
+        debugPrint(response.body);
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Erro ao fazer o request: $e');
+      return null;
+    }
+  }
 }
