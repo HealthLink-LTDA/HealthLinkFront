@@ -11,7 +11,7 @@ class RecordProvider with ChangeNotifier {
 
   final List<Record> _records = [];
 
-  List<Record> get record => List.unmodifiable(_records);
+  List<Record> get records => List.unmodifiable(_records);
 
   Future<List<Record>?> fetchRecords() async {
     final token = authProvider.authToken;
@@ -22,15 +22,18 @@ class RecordProvider with ChangeNotifier {
     }
 
     try {
-      final response = await http.get(Uri.parse('http://localhost:3001/triagem'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      });
+      final response = await http.get(
+        Uri.parse('http://localhost:3001/triagem'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
 
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
-        List<Record> records = data.map((recordJson) => Record.fromJson(recordJson)).toList();
+        List<Record> records =
+            data.map((recordJson) => Record.fromJson(recordJson)).toList();
 
         _records.clear();
         _records.addAll(records);
@@ -38,7 +41,7 @@ class RecordProvider with ChangeNotifier {
         notifyListeners();
         return records;
       } else {
-        debugPrint('Erro ao encontrar as triagens: ${response.statusCode}');
+        debugPrint('Erro ao buscar triagens: ${response.statusCode}');
         debugPrint(response.body);
         return null;
       }
@@ -48,7 +51,7 @@ class RecordProvider with ChangeNotifier {
     }
   }
 
-  Future<Record?> fetchRecordsById(String id) async {
+  Future<Record?> fetchRecordById(String id) async {
     final token = authProvider.authToken;
 
     if (token == null) {
@@ -57,20 +60,19 @@ class RecordProvider with ChangeNotifier {
     }
 
     try {
-      final response = await http.get(Uri.parse('http://localhost:3001/triagem/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      });
+      final response = await http.get(
+        Uri.parse('http://localhost:3001/triagem/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
 
       if (response.statusCode == 200) {
-        dynamic data = jsonDecode(response.body);
-        Record record = data.map((recordJson) => Record.fromJson(recordJson)).toList();
-
-        notifyListeners();
-        return record;
+        Map<String, dynamic> data = jsonDecode(response.body);
+        return Record.fromJson(data);
       } else {
-        debugPrint('Erro ao encontrar as triagens: ${response.statusCode}');
+        debugPrint('Erro ao buscar triagem: ${response.statusCode}');
         debugPrint(response.body);
         return null;
       }
@@ -92,23 +94,15 @@ class RecordProvider with ChangeNotifier {
       final response = await http.post(
         Uri.parse('http://localhost:3001/triagem'),
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'paciente': record.pacienteId,
-          'enfermeira': record.enfermeiraId,
-          'neurologico': record.neurologico,
-          'cardioVascular': record.cardioVascular,
-          'respiratorio': record.respiratorio,
-          'nebulizacaoResgate': record.nebulizacaoResgate,
-          'vomitoPersistente': record.vomitoPersistente,
-        }),
+        body: jsonEncode(record.toJson()), // Usando toJson()
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         debugPrint('Triagem criada com sucesso!');
-        notifyListeners();
+        await fetchRecords(); // Atualiza a lista
         return true;
       } else {
         debugPrint('Erro ao criar a triagem: ${response.statusCode}');
@@ -121,7 +115,7 @@ class RecordProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateTriagem(String id, Record updatedRecord) async{
+  Future<bool> updateRecord(String id, Record updatedRecord) async {
     final token = authProvider.authToken;
 
     if (token == null) {
@@ -133,23 +127,15 @@ class RecordProvider with ChangeNotifier {
       final response = await http.put(
         Uri.parse('http://localhost:3001/triagem/$id'),
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'pacienteId': updatedRecord.pacienteId,
-          'enfermeiraId': updatedRecord.enfermeiraId,
-          'neurologico': updatedRecord.neurologico,
-          'cardioVascular': updatedRecord.cardioVascular,
-          'respiratorio': updatedRecord.respiratorio,
-          'nebulizacaoResgate': updatedRecord.nebulizacaoResgate,
-          'vomitoPersistente': updatedRecord.vomitoPersistente,
-        }),
+        body: jsonEncode(updatedRecord.toJson()), // Usando toJson()
       );
 
       if (response.statusCode == 200) {
         debugPrint('Triagem atualizada com sucesso!');
-        notifyListeners();
+        await fetchRecords(); // Atualiza a lista
         return true;
       } else {
         debugPrint('Erro ao atualizar a triagem: ${response.statusCode}');
@@ -162,7 +148,7 @@ class RecordProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> deleteTriagem(String id) async {
+  Future<bool> deleteRecord(String id) async {
     final token = authProvider.authToken;
 
     if (token == null) {
@@ -174,17 +160,18 @@ class RecordProvider with ChangeNotifier {
       final response = await http.delete(
         Uri.parse('http://localhost:3001/triagem/$id'),
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
       );
 
       if (response.statusCode == 200) {
-        debugPrint('Triagem deletada com sucesso!');
+        debugPrint('Triagem removida com sucesso!');
+        _records.removeWhere((record) => record.id == id);
         notifyListeners();
         return true;
       } else {
-        debugPrint('Erro ao deletar a triagem: ${response.statusCode}');
+        debugPrint('Erro ao remover a triagem: ${response.statusCode}');
         debugPrint(response.body);
         return false;
       }

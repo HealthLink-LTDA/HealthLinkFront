@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:medical_app/models/record.dart';
+import 'package:medical_app/models/user.dart';
 import 'package:medical_app/providers/record_provider.dart';
+import 'package:medical_app/providers/patient_provider.dart';
+import 'package:medical_app/providers/user_provider.dart';
+import 'package:medical_app/providers/auth_provider.dart';
 import 'package:intl/intl.dart';
 
 class RecordsScreen extends StatefulWidget {
@@ -14,7 +18,6 @@ class RecordsScreen extends StatefulWidget {
 class _RecordsScreenState extends State<RecordsScreen> {
   final _formKey = GlobalKey<FormState>();
   String? _selectedPatientId;
-  String? _selectedDoctorId;
   Record? _editingRecord;
 
   int _neurologico = 0;
@@ -26,12 +29,21 @@ class _RecordsScreenState extends State<RecordsScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchRecords(); // Busca os registros ao entrar na tela
+    _fetchRecords();
+    _fetchPatientsAndTeam();
   }
 
   void _fetchRecords() {
     final provider = Provider.of<RecordProvider>(context, listen: false);
     provider.fetchRecords();
+  }
+
+  void _fetchPatientsAndTeam() {
+    final patientProvider =
+        Provider.of<PatientProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    patientProvider.fetchPatients();
+    userProvider.fetchTeamMembers();
   }
 
   int get totalPontos =>
@@ -45,7 +57,6 @@ class _RecordsScreenState extends State<RecordsScreen> {
     _editingRecord = record;
     if (record != null) {
       _selectedPatientId = record.pacienteId;
-      _selectedDoctorId = record.enfermeiraId;
       _neurologico = record.neurologico;
       _cardioVascular = record.cardioVascular;
       _respiratorio = record.respiratorio;
@@ -53,7 +64,6 @@ class _RecordsScreenState extends State<RecordsScreen> {
       _vomitoPersistente = record.vomitoPersistente;
     } else {
       _selectedPatientId = null;
-      _selectedDoctorId = null;
       _neurologico = 0;
       _cardioVascular = 0;
       _respiratorio = 0;
@@ -65,48 +75,86 @@ class _RecordsScreenState extends State<RecordsScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) => AlertDialog(
-          title: Text(
-              record == null ? 'Add Medical Record' : 'Edit Medical Record'),
+          title: Text(record == null ? 'Nova Triagem' : 'Editar Triagem'),
           content: SingleChildScrollView(
             child: Form(
               key: _formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Patient ID',
-                      border: OutlineInputBorder(),
-                    ),
-                    initialValue: _selectedPatientId,
-                    onChanged: (value) =>
-                        setStateDialog(() => _selectedPatientId = value),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a valid Patient ID';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Doctor ID',
-                      border: OutlineInputBorder(),
-                    ),
-                    initialValue: _selectedDoctorId,
-                    onChanged: (value) =>
-                        setStateDialog(() => _selectedDoctorId = value),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a valid Doctor ID';
-                      }
-                      return null;
+                  Consumer2<PatientProvider, UserProvider>(
+                    builder: (context, patientProvider, userProvider, _) {
+                      return Column(
+                        children: [
+                          DropdownButtonFormField<String>(
+                            decoration: const InputDecoration(
+                              labelText: 'Paciente',
+                              border: OutlineInputBorder(),
+                            ),
+                            value: _selectedPatientId,
+                            items: patientProvider.patients.map((patient) {
+                              return DropdownMenuItem(
+                                value: patient.id,
+                                child: Text(patient.name),
+                              );
+                            }).toList(),
+                            onChanged: (value) => setStateDialog(
+                                () => _selectedPatientId = value),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Por favor selecione um paciente';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          Consumer<AuthProvider>(
+                            builder: (context, authProvider, _) {
+                              final currentUserId = authProvider.currentUser!;
+                              final currentUser = userProvider.team.firstWhere(
+                                (user) => user.id == currentUserId,
+                                orElse: () => User(
+                                  id: currentUserId,
+                                  name: 'Usuário atual',
+                                  email: '',
+                                  password: '',
+                                  crm: '',
+                                  role: 0,
+                                ),
+                              );
+                              return Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Profissional responsável:',
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${currentUser.name} ',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      );
                     },
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Neurological Evaluation',
+                    'Avaliação Neurológica',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   Slider(
@@ -119,7 +167,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
                         setStateDialog(() => _neurologico = value.toInt()),
                   ),
                   const Text(
-                    'Cardiovascular Evaluation',
+                    'Avaliação Cardiovascular',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   Slider(
@@ -132,7 +180,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
                         setStateDialog(() => _cardioVascular = value.toInt()),
                   ),
                   const Text(
-                    'Respiratory Evaluation',
+                    'Avaliação Respiratória',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   Slider(
@@ -145,13 +193,13 @@ class _RecordsScreenState extends State<RecordsScreen> {
                         setStateDialog(() => _respiratorio = value.toInt()),
                   ),
                   CheckboxListTile(
-                    title: const Text('Nebulization Rescue'),
+                    title: const Text('Nebulização de Resgate'),
                     value: _nebulizacaoResgate,
                     onChanged: (value) =>
                         setStateDialog(() => _nebulizacaoResgate = value!),
                   ),
                   CheckboxListTile(
-                    title: const Text('Persistent Vomiting'),
+                    title: const Text('Vômito Persistente'),
                     value: _vomitoPersistente,
                     onChanged: (value) =>
                         setStateDialog(() => _vomitoPersistente = value!),
@@ -163,45 +211,50 @@ class _RecordsScreenState extends State<RecordsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: const Text('Cancelar'),
             ),
             ElevatedButton(
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
                   final provider =
                       Provider.of<RecordProvider>(context, listen: false);
+                  final authProvider =
+                      Provider.of<AuthProvider>(context, listen: false);
+                  final now = DateTime.now();
                   if (_editingRecord == null) {
                     provider.addRecord(
                       Record(
-                        id: DateTime.now().toString(),
+                        id: now.toString(),
                         pacienteId: _selectedPatientId!,
-                        enfermeiraId: _selectedDoctorId!,
+                        enfermeiraId: authProvider.currentUser!,
                         neurologico: _neurologico,
                         cardioVascular: _cardioVascular,
                         respiratorio: _respiratorio,
                         nebulizacaoResgate: _nebulizacaoResgate,
                         vomitoPersistente: _vomitoPersistente,
+                        data: now,
                       ),
                     );
                   } else {
-                    provider.updateTriagem(
+                    provider.updateRecord(
                       _editingRecord!.id,
                       Record(
                         id: _editingRecord!.id,
                         pacienteId: _selectedPatientId!,
-                        enfermeiraId: _selectedDoctorId!,
+                        enfermeiraId: authProvider.currentUser!,
                         neurologico: _neurologico,
                         cardioVascular: _cardioVascular,
                         respiratorio: _respiratorio,
                         nebulizacaoResgate: _nebulizacaoResgate,
                         vomitoPersistente: _vomitoPersistente,
+                        data: _editingRecord!.data,
                       ),
                     );
                   }
                   Navigator.pop(context);
                 }
               },
-              child: Text(_editingRecord == null ? 'Add' : 'Update'),
+              child: Text(_editingRecord == null ? 'Adicionar' : 'Atualizar'),
             ),
           ],
         ),
@@ -209,26 +262,44 @@ class _RecordsScreenState extends State<RecordsScreen> {
     );
   }
 
+  String _getRoleText(int role) {
+    switch (role) {
+      case 1:
+        return 'Admin';
+      case 2:
+        return 'Médico';
+      case 3:
+        return 'Enfermeiro';
+      case 4:
+        return 'Técnico';
+      default:
+        return 'Desconhecido';
+    }
+  }
+
   void _showDeleteConfirmation(BuildContext context, Record record) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Deletion'),
-        content: const Text('Are you sure you want to delete this record?'),
+        title: const Text('Confirme a exclusão'),
+        content: const Text('Você tem certeza que quer excluir essa triagem?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Cancelar'),
           ),
           ElevatedButton(
             onPressed: () {
               final provider =
                   Provider.of<RecordProvider>(context, listen: false);
-              provider.deleteTriagem(record.id);
+              provider.deleteRecord(record.id);
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: const Text(
+              'Excluir',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -239,52 +310,23 @@ class _RecordsScreenState extends State<RecordsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medical Records'),
+        title: const Text('Triagens'),
       ),
       body: Consumer<RecordProvider>(
         builder: (context, provider, _) {
-          if (provider.record.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+          if (provider.records.isEmpty) {
+            return const Center(
+                child: Text('Nenhuma triagem encontrada! Viva a saúde!'));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: provider.record.length,
+            itemCount: provider.records.length,
             itemBuilder: (context, index) {
-              final record = provider.record[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Patient ID: ${record.pacienteId}',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text('Doctor ID: ${record.enfermeiraId}'),
-                      Text('Total Points: $totalPontos'),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined),
-                            onPressed: () =>
-                                _showAddEditDialog(context, record),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline),
-                            onPressed: () =>
-                                _showDeleteConfirmation(context, record),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+              final record = provider.records[index];
+              return RecordCard(
+                record: record,
+                onEdit: () => _showAddEditDialog(context, record),
+                onDelete: () => _showDeleteConfirmation(context, record),
               );
             },
           );
@@ -293,6 +335,108 @@ class _RecordsScreenState extends State<RecordsScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEditDialog(context),
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class RecordCard extends StatefulWidget {
+  final Record record;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const RecordCard({
+    super.key,
+    required this.record,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  State<RecordCard> createState() => _RecordCardState();
+}
+
+class _RecordCardState extends State<RecordCard> {
+  String patientName = 'Carregando...';
+  String userName = 'Carregando...';
+  String userRole = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNames();
+  }
+
+  Future<void> _loadNames() async {
+    final patientProvider =
+        Provider.of<PatientProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+    final patient =
+        await patientProvider.fetchPatientById(widget.record.pacienteId);
+    final user = await userProvider.fetchUserById(widget.record.enfermeiraId);
+
+    if (mounted) {
+      setState(() {
+        patientName = patient?.name ?? 'Paciente não encontrado';
+        userName = user?.name ?? 'Funcionário não encontrado';
+        userRole = user != null ? _getRoleText(user.role) : '';
+      });
+    }
+  }
+
+  String _getRoleText(int role) {
+    switch (role) {
+      case 1:
+        return 'Admin';
+      case 2:
+        return 'Médico';
+      case 3:
+        return 'Enfermeiro';
+      case 4:
+        return 'Técnico';
+      default:
+        return 'Desconhecido';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Paciente: $patientName',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+                'Profissional: $userName ${userRole.isNotEmpty ? "($userRole)" : ""}'),
+            Text(
+                'Data: ${DateFormat('dd/MM/yyyy HH:mm').format(widget.record.data)}'),
+            Text(
+                'Total de pontos: ${widget.record.neurologico + widget.record.cardioVascular + widget.record.respiratorio + (widget.record.nebulizacaoResgate ? 3 : 0) + (widget.record.vomitoPersistente ? 3 : 0)}'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: widget.onEdit,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: widget.onDelete,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

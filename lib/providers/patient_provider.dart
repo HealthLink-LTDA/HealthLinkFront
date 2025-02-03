@@ -4,7 +4,6 @@ import 'package:medical_app/models/patient.dart';
 import 'auth_provider.dart';
 import 'package:http/http.dart' as http;
 
-
 class PatientProvider with ChangeNotifier {
   final AuthProvider authProvider;
 
@@ -13,7 +12,7 @@ class PatientProvider with ChangeNotifier {
   final List<Patient> _patients = [];
 
   List<Patient> get patients => List.unmodifiable(_patients);
-  
+
   Future<List<Patient>?> fetchPatients() async {
     final token = authProvider.authToken;
 
@@ -23,15 +22,16 @@ class PatientProvider with ChangeNotifier {
     }
 
     try {
-      final response = await http.get(Uri.parse('http://localhost:3001/paciente'),
-      headers: {
+      final response =
+          await http.get(Uri.parse('http://localhost:3001/paciente'), headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       });
 
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
-        List<Patient> patients = data.map((patientJson) => Patient.fromJson(patientJson)).toList();
+        List<Patient> patients =
+            data.map((patientJson) => Patient.fromJson(patientJson)).toList();
 
         _patients.clear();
         _patients.addAll(patients);
@@ -49,7 +49,7 @@ class PatientProvider with ChangeNotifier {
     }
   }
 
-  Future<Patient?> fetchPatientsById(String id) async {
+  Future<Patient?> fetchPatientById(String id) async {
     final token = authProvider.authToken;
 
     if (token == null) {
@@ -58,18 +58,17 @@ class PatientProvider with ChangeNotifier {
     }
 
     try {
-      final response = await http.get(Uri.parse('http://localhost:3001/paciente/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      });
+      final response = await http.get(
+        Uri.parse('http://localhost:3001/paciente/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
 
       if (response.statusCode == 200) {
-        dynamic data = jsonDecode(response.body);
-        Patient patient = data.map((patientJson) => Patient.fromJson(patientJson)).toList();
-
-        notifyListeners();
-        return patient;
+        final data = jsonDecode(response.body);
+        return Patient.fromJson(data);
       } else {
         debugPrint('Erro ao encontrar o paciente: ${response.statusCode}');
         debugPrint(response.body);
@@ -95,7 +94,7 @@ class PatientProvider with ChangeNotifier {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
-          },
+        },
         body: jsonEncode({
           'nome': patient.name,
           'cpf': patient.cpf,
@@ -135,7 +134,7 @@ class PatientProvider with ChangeNotifier {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
-          },
+        },
         body: jsonEncode({
           'nome': updatedPatient.name,
           'cpf': updatedPatient.cpf,
@@ -175,7 +174,7 @@ class PatientProvider with ChangeNotifier {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
-          },
+        },
       );
 
       if (response.statusCode == 200) {

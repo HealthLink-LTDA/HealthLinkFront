@@ -67,7 +67,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(patient == null ? 'Add Patient' : 'Edit Patient'),
+        title: Text(patient == null ? 'Adicionar Paciente' : 'Editar Paciente'),
         content: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -77,12 +77,12 @@ class _PatientsScreenState extends State<PatientsScreen> {
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Patient Name',
+                    labelText: 'Nome do Paciente',
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter patient name';
+                      return 'Por favor insira o nome do paciente';
                     }
                     return null;
                   },
@@ -97,7 +97,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                   inputFormatters: [_cpfFormatter],
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter CPF';
+                      return 'Por favor insira o CPF';
                     }
                     return null;
                   },
@@ -106,7 +106,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                 TextFormField(
                   controller: _dateController,
                   decoration: const InputDecoration(
-                    labelText: 'Date of Birth',
+                    labelText: 'Data de nascimento',
                     border: OutlineInputBorder(),
                   ),
                   readOnly: true,
@@ -124,7 +124,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please select date of birth';
+                      return 'Por favor insira a data de nascimento';
                     }
                     return null;
                   },
@@ -133,12 +133,12 @@ class _PatientsScreenState extends State<PatientsScreen> {
                 TextFormField(
                   controller: _guardianController,
                   decoration: const InputDecoration(
-                    labelText: 'Guardian Name',
+                    labelText: 'Nome do responsável',
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter guardian name';
+                      return 'Por favor insira o nome do responsável';
                     }
                     return null;
                   },
@@ -147,7 +147,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                 TextFormField(
                   controller: _notesController,
                   decoration: const InputDecoration(
-                    labelText: 'Notes',
+                    labelText: 'Notas',
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 3,
@@ -159,7 +159,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Cancelar'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -195,7 +195,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                 }
               }
             },
-            child: Text(_editingPatient == null ? 'Add' : 'Update'),
+            child: Text(_editingPatient == null ? 'Adicionar' : 'Atualizar'),
           ),
         ],
       ),
@@ -206,12 +206,12 @@ class _PatientsScreenState extends State<PatientsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Patients'),
+        title: const Text('Pacientes'),
       ),
       body: Consumer<PatientProvider>(
         builder: (context, provider, _) {
           if (provider.patients.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: Text('Sem pacientes no momento...'));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -234,7 +234,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text('CPF: ${patient.cpf}'),
-                      Text('Guardian: ${patient.guardianName}'),
+                      Text('Responsável: ${patient.guardianName}'),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
