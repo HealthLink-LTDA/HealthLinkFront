@@ -60,6 +60,12 @@ class UserProvider with ChangeNotifier {
     }
 
     try {
+      debugPrint('Enviando novo membro:');
+      debugPrint('Nome: ${user.name}');
+      debugPrint('Email: ${user.email}');
+      debugPrint('Role selecionada: ${user.role}');
+      debugPrint('CRM: ${user.crm}');
+
       final response = await http.post(
         Uri.parse('http://localhost:3001/funcionario'),
         headers: {
@@ -71,13 +77,18 @@ class UserProvider with ChangeNotifier {
           'email': user.email,
           'senha': user.password,
           'crm': user.crm,
-          'roleId': user.role,
+          'cargoId': user.role,
         }),
       );
 
+      debugPrint('Status code: ${response.statusCode}');
+      debugPrint('Resposta: ${response.body}');
+
       if (response.statusCode == 201) {
         debugPrint('Funcionário criado com sucesso!');
-        await fetchTeamMembers();
+        final newUser = User.fromJson(jsonDecode(response.body));
+        _team.add(newUser);
+        notifyListeners();
         return true;
       } else {
         debugPrint('Erro ao criar o funcionário: ${response.statusCode}');
@@ -99,6 +110,13 @@ class UserProvider with ChangeNotifier {
     }
 
     try {
+      debugPrint('Atualizando membro:');
+      debugPrint('ID: $id');
+      debugPrint('Nome: ${updatedUser.name}');
+      debugPrint('Email: ${updatedUser.email}');
+      debugPrint('Role selecionada: ${updatedUser.role}');
+      debugPrint('CRM: ${updatedUser.crm}');
+
       final response = await http.put(
         Uri.parse('http://localhost:3001/funcionario/$id'),
         headers: {
@@ -108,15 +126,20 @@ class UserProvider with ChangeNotifier {
         body: jsonEncode({
           'nome': updatedUser.name,
           'email': updatedUser.email,
-          'senha': updatedUser.password,
+          if (updatedUser.password != null && updatedUser.password!.isNotEmpty)
+            'senha': updatedUser.password,
           'crm': updatedUser.crm,
-          'roleId': updatedUser.role,
+          'cargoId': updatedUser.role,
         }),
       );
 
       if (response.statusCode == 200) {
         debugPrint('Funcionário atualizado com sucesso!');
-        await fetchTeamMembers();
+        final index = _team.indexWhere((user) => user.id == id);
+        if (index != -1) {
+          _team[index] = User.fromJson(jsonDecode(response.body));
+          notifyListeners();
+        }
         return true;
       } else {
         debugPrint('Erro ao atualizar o funcionário: ${response.statusCode}');
@@ -148,7 +171,8 @@ class UserProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         debugPrint('Funcionário deletado com sucesso!');
-        await fetchTeamMembers();
+        _team.removeWhere((user) => user.id == id);
+        notifyListeners();
         return true;
       } else {
         debugPrint('Erro ao deletar funcionário: ${response.statusCode}');

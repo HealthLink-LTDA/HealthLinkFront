@@ -63,13 +63,14 @@ class _TeamScreenState extends State<TeamScreen> {
       _emailController.text = user.email;
       _passwordController.clear();
       _crmController.text = user.crm ?? '';
-      _selectedRole = user.role;
+      if (_selectedRole != user.role) {
+        _selectedRole = user.role;
+      }
     } else {
       _nameController.clear();
       _emailController.clear();
       _passwordController.clear();
       _crmController.clear();
-      _selectedRole = 1;
     }
 
     showDialog(
@@ -123,7 +124,6 @@ class _TeamScreenState extends State<TeamScreen> {
                       DropdownMenuItem(value: 1, child: Text('Admin')),
                       DropdownMenuItem(value: 2, child: Text('Doutor')),
                       DropdownMenuItem(value: 3, child: Text('Enfermeira')),
-                      DropdownMenuItem(value: 4, child: Text('Técnico')),
                     ],
                     onChanged: (value) {
                       setStateDialog(() {
@@ -176,12 +176,14 @@ class _TeamScreenState extends State<TeamScreen> {
               child: const Text('Cancelar'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (_formKey.currentState!.validate()) {
                   final provider =
                       Provider.of<UserProvider>(context, listen: false);
+                  bool success;
+
                   if (_editingMember == null) {
-                    provider.addTeamMember(
+                    success = await provider.addTeamMember(
                       User(
                         id: DateTime.now().toString(),
                         name: _nameController.text,
@@ -192,7 +194,7 @@ class _TeamScreenState extends State<TeamScreen> {
                       ),
                     );
                   } else {
-                    provider.updateTeamMember(
+                    success = await provider.updateTeamMember(
                       _editingMember!.id,
                       User(
                         id: _editingMember!.id,
@@ -204,8 +206,10 @@ class _TeamScreenState extends State<TeamScreen> {
                       ),
                     );
                   }
-                  provider.fetchTeamMembers();
-                  Navigator.pop(context);
+
+                  if (success && context.mounted) {
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: Text(_editingMember == null ? 'Adicionar' : 'Atualizar'),
@@ -229,12 +233,14 @@ class _TeamScreenState extends State<TeamScreen> {
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               final provider =
                   Provider.of<UserProvider>(context, listen: false);
-              provider.deleteTeamMember(member.id);
-              provider.fetchTeamMembers();
-              Navigator.pop(context);
+              final success = await provider.deleteTeamMember(member.id);
+
+              if (success && context.mounted) {
+                Navigator.pop(context);
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text(
@@ -255,8 +261,6 @@ class _TeamScreenState extends State<TeamScreen> {
         return 'Doutor';
       case 3:
         return 'Enfermeira';
-      case 4:
-        return 'Técnico';
       default:
         return 'Desconhecido';
     }
