@@ -8,6 +8,9 @@ class Record {
   final bool nebulizacaoResgate;
   final bool vomitoPersistente;
   final DateTime data; // Adicionado o campo de data
+  final String patientName;
+  final int pewsScore;
+  final DateTime createdAt;
 
   Record({
     required this.id,
@@ -19,21 +22,36 @@ class Record {
     required this.nebulizacaoResgate,
     required this.vomitoPersistente,
     required this.data,
+    required this.patientName,
+    required this.pewsScore,
+    required this.createdAt,
   });
+
+  int get calculatedPewsScore =>
+      neurologico +
+      cardioVascular +
+      respiratorio +
+      (nebulizacaoResgate ? 3 : 0) +
+      (vomitoPersistente ? 3 : 0);
 
   factory Record.fromJson(Map<String, dynamic> json) {
     return Record(
       id: json['id'] as String,
-      pacienteId: json['paciente']['id']
-          as String, // Ajustado para pegar o ID corretamente
-      enfermeiraId: json['enfermeira']['id']
-          as String, // Ajustado para pegar o ID corretamente
+      pacienteId: json['paciente']['id'] as String,
+      enfermeiraId: json['enfermeira']['id'] as String,
       neurologico: json['neurologico'] as int,
       cardioVascular: json['cardioVascular'] as int,
       respiratorio: json['respiratorio'] as int,
       nebulizacaoResgate: json['nebulizacaoResgate'] as bool,
       vomitoPersistente: json['vomitoPersistente'] as bool,
-      data: DateTime.parse(json['data']), // Convertendo string para DateTime
+      data: DateTime.parse(json['data']),
+      patientName: json['paciente']['nome'] as String,
+      pewsScore: (json['neurologico'] as int) +
+          (json['cardioVascular'] as int) +
+          (json['respiratorio'] as int) +
+          ((json['nebulizacaoResgate'] as bool) ? 3 : 0) +
+          ((json['vomitoPersistente'] as bool) ? 3 : 0),
+      createdAt: DateTime.parse(json['data']),
     );
   }
 
@@ -48,6 +66,9 @@ class Record {
       'nebulizacaoResgate': nebulizacaoResgate,
       'vomitoPersistente': vomitoPersistente,
       'data': data.toIso8601String(), // Convertendo DateTime para string ISO
+      'nomePaciente': patientName,
+      'notaPews': pewsScore,
+      'createdAt': createdAt.toIso8601String(),
     };
   }
 }
