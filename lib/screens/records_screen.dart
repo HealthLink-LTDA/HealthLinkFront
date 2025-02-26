@@ -9,7 +9,9 @@ import 'package:medical_app/providers/auth_provider.dart';
 import 'package:intl/intl.dart';
 
 class RecordsScreen extends StatefulWidget {
-  const RecordsScreen({super.key});
+  final Record? initialRecord;
+
+  const RecordsScreen({super.key, this.initialRecord});
 
   @override
   State<RecordsScreen> createState() => _RecordsScreenState();
@@ -31,6 +33,13 @@ class _RecordsScreenState extends State<RecordsScreen> {
     super.initState();
     _fetchRecords();
     _fetchPatientsAndTeam();
+
+    // Se houver uma triagem inicial, abrir o diálogo de edição
+    if (widget.initialRecord != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showAddEditDialog(context, widget.initialRecord);
+      });
+    }
   }
 
   void _fetchRecords() {
@@ -224,7 +233,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
                   if (_editingRecord == null) {
                     provider.addRecord(
                       Record(
-                        id: now.toString(),
+                        id: DateTime.now().toString(),
                         pacienteId: _selectedPatientId!,
                         enfermeiraId: authProvider.currentUser!,
                         neurologico: _neurologico,
@@ -233,6 +242,9 @@ class _RecordsScreenState extends State<RecordsScreen> {
                         nebulizacaoResgate: _nebulizacaoResgate,
                         vomitoPersistente: _vomitoPersistente,
                         data: now,
+                        patientName: _selectedPatientId!,
+                        pewsScore: _calculatePewsScore(),
+                        createdAt: now,
                       ),
                     );
                   } else {
@@ -248,6 +260,9 @@ class _RecordsScreenState extends State<RecordsScreen> {
                         nebulizacaoResgate: _nebulizacaoResgate,
                         vomitoPersistente: _vomitoPersistente,
                         data: _editingRecord!.data,
+                        patientName: _selectedPatientId!,
+                        pewsScore: _calculatePewsScore(),
+                        createdAt: _editingRecord!.createdAt,
                       ),
                     );
                   }
@@ -304,6 +319,16 @@ class _RecordsScreenState extends State<RecordsScreen> {
         ],
       ),
     );
+  }
+
+  int _calculatePewsScore() {
+    int score = 0;
+    score += _neurologico;
+    score += _cardioVascular;
+    score += _respiratorio;
+    if (_nebulizacaoResgate) score += 1;
+    if (_vomitoPersistente) score += 1;
+    return score;
   }
 
   @override

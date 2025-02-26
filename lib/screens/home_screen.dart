@@ -50,8 +50,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           NavigationDestination(
             icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search),
-            label: 'Pesquisar',
+            selectedIcon: Icon(Icons.medical_information),
+            label: 'PEWS',
           ),
           NavigationDestination(
             icon: Icon(Icons.group_outlined),

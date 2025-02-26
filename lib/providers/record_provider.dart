@@ -97,12 +97,14 @@ class RecordProvider with ChangeNotifier {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode(record.toJson()), // Usando toJson()
+        body: jsonEncode(record.toJson()),
       );
 
       if (response.statusCode == 201) {
         debugPrint('Triagem criada com sucesso!');
-        await fetchRecords(); // Atualiza a lista
+        final newRecord = Record.fromJson(jsonDecode(response.body));
+        _records.add(newRecord);
+        notifyListeners();
         return true;
       } else {
         debugPrint('Erro ao criar a triagem: ${response.statusCode}');
@@ -130,12 +132,17 @@ class RecordProvider with ChangeNotifier {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode(updatedRecord.toJson()), // Usando toJson()
+        body: jsonEncode(updatedRecord.toJson()),
       );
 
       if (response.statusCode == 200) {
         debugPrint('Triagem atualizada com sucesso!');
-        await fetchRecords(); // Atualiza a lista
+        final updatedRecordFromApi = Record.fromJson(jsonDecode(response.body));
+        final index = _records.indexWhere((record) => record.id == id);
+        if (index != -1) {
+          _records[index] = updatedRecordFromApi;
+          notifyListeners();
+        }
         return true;
       } else {
         debugPrint('Erro ao atualizar a triagem: ${response.statusCode}');
