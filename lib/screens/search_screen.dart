@@ -32,11 +32,12 @@ class MonitoringTimer extends StatefulWidget {
 class _MonitoringTimerState extends State<MonitoringTimer> {
   Timer? _timer;
   Duration _timeUntilNextCheck = Duration.zero;
+  late DateTime _nextCheck;
 
   @override
   void initState() {
     super.initState();
-    _calculateNextCheck();
+    _initializeNextCheck();
     _startTimer();
   }
 
@@ -46,7 +47,7 @@ class _MonitoringTimerState extends State<MonitoringTimer> {
     super.dispose();
   }
 
-  void _calculateNextCheck() {
+  void _initializeNextCheck() {
     int intervalHours;
     if (widget.pewsScore >= 7) {
       return;
@@ -60,12 +61,11 @@ class _MonitoringTimerState extends State<MonitoringTimer> {
       intervalHours = 6;
     }
 
-    DateTime nextCheck = widget.lastUpdate;
-    while (nextCheck.isBefore(DateTime.now())) {
-      nextCheck = nextCheck.add(Duration(hours: intervalHours));
+    _nextCheck = widget.lastUpdate;
+    while (_nextCheck.isBefore(DateTime.now())) {
+      _nextCheck = _nextCheck.add(Duration(hours: intervalHours));
     }
-
-    _timeUntilNextCheck = nextCheck.difference(DateTime.now());
+    _timeUntilNextCheck = _nextCheck.difference(DateTime.now());
   }
 
   void _startTimer() {
@@ -74,11 +74,7 @@ class _MonitoringTimerState extends State<MonitoringTimer> {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
-          _calculateNextCheck();
-          if (_timeUntilNextCheck.isNegative) {
-            // Opcional: você pode querer fazer algo quando o tempo acabar
-            // Como tocar um som ou mostrar uma notificação
-          }
+          _timeUntilNextCheck = _nextCheck.difference(DateTime.now());
         });
       }
     });
@@ -304,13 +300,14 @@ class _SearchScreenState extends State<SearchScreen> {
                     children: [
                       Text('Nota PEWS: $pewsScore'),
                       MonitoringTimer(
+                        key: ValueKey('timer_${record.id}'),
                         lastUpdate: record.data,
                         pewsScore: pewsScore,
                       ),
                     ],
                   ),
                   trailing: IconButton(
-                    icon: const Icon(Icons.edit),
+                    icon: const Icon(Icons.update),
                     onPressed: () => _showEditDialog(context, record),
                   ),
                 ),
